@@ -15,11 +15,14 @@ set(CMAKE_C_EXTENSIONS ON)
 
 # Define the build type
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
+  set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
 # Set the project name
 set(CMAKE_PROJECT_NAME base)
+
+# ThreadX configuration for Cortex-M4 / GCC
+set(THREADX_ARCH cortex_m4)
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -36,6 +39,13 @@ add_executable(${CMAKE_PROJECT_NAME})
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
+
+# Add ThreadX RTOS
+add_subdirectory(../../threadx threadx)
+
+# Add shared project libraries
+add_subdirectory(../../utils ${CMAKE_CURRENT_BINARY_DIR}/utils)
+add_subdirectory(../../robot ${CMAKE_CURRENT_BINARY_DIR}/robot)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -63,6 +73,9 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
+    azrtos::threadx
+    utils
+    robot
 
     # Add user defined libraries
 )
