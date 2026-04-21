@@ -45,6 +45,7 @@ add_subdirectory(../../threadx threadx)
 
 # Add shared project libraries
 add_subdirectory(../../utils ${CMAKE_CURRENT_BINARY_DIR}/utils)
+add_subdirectory(../../board/bsp ${CMAKE_CURRENT_BINARY_DIR}/bsp)
 add_subdirectory(../../robot ${CMAKE_CURRENT_BINARY_DIR}/robot)
 
 # Link directories setup
@@ -75,6 +76,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
     azrtos::threadx
     utils
+    bsp
     robot
     # Add user defined libraries
 )

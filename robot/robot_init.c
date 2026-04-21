@@ -10,6 +10,7 @@
 #include "robot_init.h"
 
 #include "utils_init.h"
+#include "bsp_init.h"
 
 #define LOG_LVL LOG_LVL_INFO
 #define LOG_TAG "Robot_Init"
@@ -18,6 +19,7 @@
 void Robot_Init(void)
 {
     UTILS_Init();
+    BSP_Init();
 
     LOG_I("robot init finished");
 }
