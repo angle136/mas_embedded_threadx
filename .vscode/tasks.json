@@ -1,11 +1,40 @@
 {
     "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "selectBoard",
+            "type": "pickString",
+            "description": "选择开发板",
+            "options": [
+                "damiao_h7",
+                "dji_c"
+            ],
+            "default": "dji_c"
+        },
+        {
+            "id": "selectProbe",
+            "type": "pickString",
+            "description": "选择调试器",
+            "options": [
+                "stlink",
+                "daplink",
+                "jlink"
+            ],
+            "default": "jlink"
+        }
+    ],
     "tasks": [
         {
-            // 交互式构建：提示选择板子和构建类型
-            "label": "Build STM32",
+            "label": "Build damiao_h7",
             "type": "shell",
-            "command": "${workspaceFolder}/.vscode/build.bat",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "cmake -S ${workspaceFolder}/board/damiao_h7 -B ${workspaceFolder}/build/damiao_h7/Debug --preset Debug -G Ninja; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cmake --build ${workspaceFolder}/build/damiao_h7/Debug --config Debug -j ${env:NUMBER_OF_PROCESSORS}; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path ${workspaceFolder}/build/damiao_h7/Debug/compile_commands.json -Destination ${workspaceFolder}/build/compile_commands.json -Force; Copy-Item -Path ${workspaceFolder}/build/damiao_h7/Debug/base.elf -Destination ${workspaceFolder}/build/damiao_h7.elf -Force"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -14,146 +43,44 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
-                "focus": true,
+                "focus": false,
                 "echo": true,
-                "showReuseMessage": false,
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-        {
-            "label": "Build damiao_h7",
-            "type": "shell",
-            "command": "${workspaceFolder}/.vscode/build.bat damiao_h7 Debug",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": true,
-                "echo": true,
-                "showReuseMessage": false,
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
+                "showReuseMessage": false
             }
         },
         {
             "label": "Build dji_c",
             "type": "shell",
-            "command": "${workspaceFolder}/.vscode/build.bat dji_c Debug",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "cmake -S ${workspaceFolder}/board/dji_c -B ${workspaceFolder}/build/dji_c/Debug --preset Debug -G Ninja; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cmake --build ${workspaceFolder}/build/dji_c/Debug --config Debug -j ${env:NUMBER_OF_PROCESSORS}; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path ${workspaceFolder}/build/dji_c/Debug/compile_commands.json -Destination ${workspaceFolder}/build/compile_commands.json -Force; Copy-Item -Path ${workspaceFolder}/build/dji_c/Debug/base.elf -Destination ${workspaceFolder}/build/dji_c.elf -Force"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
-                "focus": true,
+                "focus": false,
                 "echo": true,
-                "showReuseMessage": false,
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-
-        // ── ST-Link ─────────────────────────────────────────────────
-        {
-            "label": "Flash [ST-Link] damiao_h7",
-            "type": "shell",
-            "command": "${workspaceFolder}/.vscode/flash.bat damiao_h7 stlink",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": true,
-                "echo": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
+                "showReuseMessage": false
             }
         },
         {
-            "label": "Flash [ST-Link] dji_c",
+            "label": "Flash board",
             "type": "shell",
-            "command": "${workspaceFolder}/.vscode/flash.bat dji_c stlink",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "${workspaceFolder}/.vscode/flash_interactive.bat ${input:selectBoard} ${input:selectProbe}"
+            ],
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
-                "focus": true,
-                "echo": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-
-        // ── DAPLink ──────────────────────────────────────────────────
-        {
-            "label": "Flash [DAPLink] damiao_h7",
-            "type": "shell",
-            "command": "${workspaceFolder}/.vscode/flash.bat damiao_h7 daplink",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": true,
-                "echo": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-        {
-            "label": "Flash [DAPLink] dji_c",
-            "type": "shell",
-            "command": "${workspaceFolder}/.vscode/flash.bat dji_c daplink",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": true,
-                "echo": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-
-        // ── J-Link ───────────────────────────────────────────────────
-        {
-            "label": "Flash [J-Link] damiao_h7",
-            "type": "shell",
-            "command": "${workspaceFolder}/.vscode/flash.bat damiao_h7 jlink",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": true,
-                "echo": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-        {
-            "label": "Flash [J-Link] dji_c",
-            "type": "shell",
-            "command": "${workspaceFolder}/.vscode/flash.bat dji_c jlink",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": true,
+                "focus": false,
                 "echo": true,
                 "showReuseMessage": false,
                 "close": true
