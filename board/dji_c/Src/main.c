@@ -30,7 +30,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_device.h"
+#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -123,7 +123,7 @@ int main(void)
     MX_CRC_Init();
     MX_DAC_Init();
     // MX_IWDG_Init();
-    MX_USB_DEVICE_Init();
+    MX_USB_OTG_FS_PCD_Init();
     /* USER CODE BEGIN 2 */
     tx_kernel_enter();
     /* USER CODE END 2 */

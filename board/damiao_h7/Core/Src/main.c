@@ -33,7 +33,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_device.h"
+#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -145,9 +145,9 @@ int main(void)
     MX_UART5_Init();
     MX_RNG_Init();
     MX_SPI6_Init();
-    //MX_IWDG1_Init();
-    MX_USB_DEVICE_Init();
+    // MX_IWDG1_Init();
     MX_I2C2_Init();
+    MX_USB_OTG_HS_PCD_Init();
     /* USER CODE BEGIN 2 */
     tx_kernel_enter();
     /* USER CODE END 2 */
