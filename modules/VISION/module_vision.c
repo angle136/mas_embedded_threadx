@@ -1,4 +1,5 @@
 #include "module_vision.h"
+#include "bsp_def.h"
 #include "usbd_cdc_acm_user.h"
 #include <string.h>
 #include "tx_api.h"
@@ -13,29 +14,40 @@
 #define RECV_HEADER 0xBB
 #define RECV_TAIL   0x55
 
-static ReceivePacket   rx_packet;
-static bool            rx_valid;
-static Offline_Device *offline_dev = NULL;
+static ReceivePacket              rx_packet;
+static Offline_Device            *offline_dev = NULL;
+static TX_THREAD                  vision_thread;
+APPS_STACK_SECTION static uint8_t vision_thread_stack[VISION_TASK_STACK_SIZE];
 
-/* 接收状态机 */
-typedef enum
+/**
+ * @brief 视觉任务 — 阻塞读取 USB 数据, 帧头+长度+帧尾校验后直接拷贝
+ */
+static void vision_thread_entry(ULONG arg)
 {
-    STATE_WAIT_HEADER,
-    STATE_RECV_DATA,
-} RecvState_t;
+    uint8_t  buf[64];
+    uint32_t rx_len;
 
-static RecvState_t recv_state = STATE_WAIT_HEADER;
-static uint8_t     recv_buf[sizeof(ReceivePacket)];
-static uint8_t     recv_idx;
+    while (1)
+    {
+        int ret = cdc_acm_recv(buf, &rx_len, TX_WAIT_FOREVER);
+        if (ret <= 0) continue;
+
+        for (uint32_t i = 0; i + sizeof(ReceivePacket) <= rx_len; i++)
+        {
+            if (buf[i] == RECV_HEADER && buf[i + sizeof(ReceivePacket) - 1] == RECV_TAIL)
+            {
+                memcpy(&rx_packet, &buf[i], sizeof(ReceivePacket));
+                Module_Offline_device_update(offline_dev);
+                break;
+            }
+        }
+    }
+}
 
 /* 对外函数 */
 
 void Module_Vision_Init(void)
 {
-    recv_state = STATE_WAIT_HEADER;
-    recv_idx   = 0;
-    rx_valid   = false;
-
     Offline_Init_config_t offlineconfig = {.name = "minipc", .beep_times = 10, .enable = 1, .timeout_ms = 100};
     offline_dev                         = Module_Offline_register(&offlineconfig);
     if (offline_dev == NULL)
@@ -44,56 +56,31 @@ void Module_Vision_Init(void)
         return;
     }
 
+    UINT status = tx_thread_create(&vision_thread, "vision_thread", vision_thread_entry, 0, vision_thread_stack, VISION_TASK_STACK_SIZE,
+                                   VISION_TASK_PRIORITY, VISION_TASK_PRIORITY, TX_NO_TIME_SLICE, TX_AUTO_START);
+    if (status != TX_SUCCESS)
+    {
+        LOG_E("thread create failed");
+        return;
+    }
+
     LOG_I("Vision module initialized");
 }
 
-void Module_Vision_Send(SendPacket *packet)
+void Module_Vision_Send(SendPacket *packet, uint32_t timeout)
 {
     packet->header = SEND_HEADER;
     packet->tail   = SEND_TAIL;
-    cdc_acm_send((uint8_t *)packet, sizeof(SendPacket), TX_WAIT_FOREVER);
+    cdc_acm_send((uint8_t *)packet, sizeof(SendPacket), timeout);
 }
 
-ReceivePacket *Module_Vision_Receive(void)
+ReceivePacket *Module_Vision_Receive(void) { return &rx_packet; }
+
+uint8_t Module_Vision_Get_offline_state(void)
 {
-    uint8_t byte;
-
-    /* 读取所有可用字节 */
-    while (cdc_acm_available())
+    if (offline_dev == NULL)
     {
-        cdc_acm_recv(&byte, 1);
-
-        switch (recv_state)
-        {
-        case STATE_WAIT_HEADER:
-            if (byte == RECV_HEADER)
-            {
-                recv_buf[0] = byte;
-                recv_idx    = 1;
-                recv_state  = STATE_RECV_DATA;
-            }
-            break;
-
-        case STATE_RECV_DATA:
-            recv_buf[recv_idx++] = byte;
-            if (recv_idx >= sizeof(ReceivePacket))
-            {
-                /* 尾字节校验 */
-                if (recv_buf[sizeof(ReceivePacket) - 1] == RECV_TAIL)
-                {
-                    memcpy(&rx_packet, recv_buf, sizeof(ReceivePacket));
-                    rx_valid = true;
-                }
-                recv_state = STATE_WAIT_HEADER;
-            }
-            break;
-        }
+        return STATE_OFFLINE; // 如果离线设备未初始化，默认返回离线状态
     }
-
-    if (rx_valid)
-    {
-        rx_valid = false;
-        return &rx_packet;
-    }
-    return NULL;
+    return Module_Offline_get_device_status(offline_dev);
 }
