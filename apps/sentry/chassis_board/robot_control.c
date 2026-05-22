@@ -36,13 +36,14 @@ static void robot_control_task(ULONG thread_input)
         }
         else
         {
-            chassis_cmd.vx           = chassis_recv_cmd.vx / 100.0f;
-            chassis_cmd.vy           = chassis_recv_cmd.vy / 100.0f;
-            chassis_cmd.wz           = chassis_recv_cmd.wz / 100.0f;
-            chassis_cmd.offset_angle = chassis_recv_cmd.offset_angle;
+            chassis_cmd.vx           = chassis_recv_cmd.vx;
+            chassis_cmd.vy           = chassis_recv_cmd.vy;
+            chassis_cmd.wz           = chassis_recv_cmd.wz;
+            // 编码器差值 → 弧度: (ecd / 8191) * 2π
+            chassis_cmd.offset_angle = (float)chassis_recv_cmd.offset_angle * (2.0f * 3.14159265354f) / 8191.0f;
             chassis_cmd.chassis_mode = chassis_recv_cmd.chassis_mode;
         }
-        
+
         handle_referee_data(&chassis_send_data);
         Module_BoardComm_Send((uint8_t *)&chassis_send_data, sizeof(ChassisToGimbal_referee_t));
 

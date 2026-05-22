@@ -17,7 +17,7 @@ static DJI_Motor_t                  *chassis_motors[8];
 static float                         chassis_vx, chassis_vy, chassis_wz; // 将云台系的速度投影到底盘
 static PIDInstance                   chassis_follow_pid;
 static const Chassis_Swerve_Config_s chassis_swerve_config = {
-    .align_rad      = {7160 * 0.000767f, 1125 * 0.000767f, 1694 * 0.000767f, 6476 * 0.000767f}, // lf lb rb rf(rad)
+    .align_rad      = {4458 * 0.000767f, 1010 * 0.000767f, 7177 * 0.000767f, 3756 * 0.000767f}, // lf lb rb rf(rad)
     .decele_ratio   = 16.0f,
     .radius_wheel_m = 0.12f,
     .wheel_r        = 0.5f,
@@ -117,33 +117,35 @@ void chassis_init(void)
 
     PowerCtrl_Param_t gm6020_power_config = {.k1 = 0.005, .k2 = 12.98, .k3 = 1};
 
-    gm6020_motor_config.transport_config.can.tx_id             = 2;
+    gm6020_motor_config.transport_config.can.tx_id             = 1;
     gm6020_motor_config.setting_init_config.motor_reverse_flag = 0;
-    gm6020_motor_config.offline_init_config.name               = "gm6020_2";
+    gm6020_motor_config.offline_init_config.name               = "gm6020_1";
     gm6020_motor_config.offline_init_config.beep_times         = 5;
     chassis_motors[4]                                          = Motor_DJI_Init(&gm6020_motor_config);
     PowerControl_Register(&chassis_motors[4]->base, PC_ROLE_STEER, gm6020_power_config);
 
-    gm6020_motor_config.transport_config.can.tx_id             = 3;
+    gm6020_motor_config.transport_config.can.tx_id             = 2;
     gm6020_motor_config.setting_init_config.motor_reverse_flag = 0;
-    gm6020_motor_config.offline_init_config.name               = "gm6020_3";
+    gm6020_motor_config.offline_init_config.name               = "gm6020_2";
     gm6020_motor_config.offline_init_config.beep_times         = 6;
     chassis_motors[5]                                          = Motor_DJI_Init(&gm6020_motor_config);
     PowerControl_Register(&chassis_motors[5]->base, PC_ROLE_STEER, gm6020_power_config);
 
-    gm6020_motor_config.transport_config.can.tx_id             = 4;
+    gm6020_motor_config.transport_config.can.tx_id             = 3;
     gm6020_motor_config.setting_init_config.motor_reverse_flag = 0;
-    gm6020_motor_config.offline_init_config.name               = "gm6020_4";
+    gm6020_motor_config.offline_init_config.name               = "gm6020_3";
     gm6020_motor_config.offline_init_config.beep_times         = 7;
     chassis_motors[6]                                          = Motor_DJI_Init(&gm6020_motor_config);
     PowerControl_Register(&chassis_motors[6]->base, PC_ROLE_STEER, gm6020_power_config);
 
-    gm6020_motor_config.transport_config.can.tx_id             = 1;
+    gm6020_motor_config.transport_config.can.tx_id             = 4;
     gm6020_motor_config.setting_init_config.motor_reverse_flag = 0;
-    gm6020_motor_config.offline_init_config.name               = "gm6020_1";
+    gm6020_motor_config.offline_init_config.name               = "gm6020_4";
     gm6020_motor_config.offline_init_config.beep_times         = 8;
     chassis_motors[7]                                          = Motor_DJI_Init(&gm6020_motor_config);
     PowerControl_Register(&chassis_motors[7]->base, PC_ROLE_STEER, gm6020_power_config);
+
+    PowerControl_SetLimit(120,60,0);
 
     LOG_I("Chassis initialized");
 }
@@ -191,7 +193,7 @@ void chassis_func(Chassis_Ctrl_Cmd_t *chassis_cmd)
                 chassis_wz = -8;
                 break;
             case chassis_follow_gimbal_yaw: // 跟随云台
-                PIDCalculate(&chassis_follow_pid, chassis_cmd->offset_angle * RAD_2_DEGREE, 0);
+                PIDCalculate(&chassis_follow_pid, chassis_cmd->offset_angle * DEGREE_2_RAD, 0);
                 chassis_wz = chassis_follow_pid.Output;
                 break;
             case chassis_rotate: // 自旋,同时保持全向机动

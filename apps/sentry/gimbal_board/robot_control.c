@@ -53,13 +53,13 @@ static void robot_control_task(ULONG thread_input)
         shoot_func(&shoot_cmd);
 
         /* 板间通讯 */
-        chassis_send_cmd.vx = chassis_cmd.vx * 100;
-        chassis_send_cmd.vy = chassis_cmd.vy * 100;
-        chassis_send_cmd.wz = chassis_cmd.wz * 100;
+        chassis_send_cmd.vx           = chassis_cmd.vx;
+        chassis_send_cmd.vy           = chassis_cmd.vy;
+        chassis_send_cmd.wz           = chassis_cmd.wz;
         chassis_send_cmd.offset_angle = CalcOffsetAngle(yaw_ecd);
         chassis_send_cmd.chassis_mode = chassis_cmd.chassis_mode;
         Module_BoardComm_Send((uint8_t *)&chassis_send_cmd, sizeof(GimbalToChassis_cmd_t));
-        
+
         tx_thread_sleep(2);
     }
 }

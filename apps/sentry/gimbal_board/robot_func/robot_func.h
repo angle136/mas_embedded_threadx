@@ -12,11 +12,11 @@
 #include "sentry_def.h"
 
 /**
- * @brief 计算相对于对齐角度的偏差，返回弧度制
+ * @brief 计算相对于对齐角度的最小旋转角度，返回编码器差值
  * @param getyawangle 当前编码器值 (0 - 8191)
- * @return 偏差弧度值 (范围 -PI 到 PI)
+ * @return 归一化后的编码器差值 (范围 -4095 ～ 4095)，符号表示旋转方向
  */
-float CalcOffsetAngle(float getyawangle);
+int16_t CalcOffsetAngle(float getyawangle);
 
 /**
  * @brief 根据遥控器输入设置底盘、云台和发射机构的控制命令
