@@ -37,7 +37,7 @@
 static Module_WT606_Device_t      wt606_device;
 static TX_THREAD                  wt606_thread;
 APPS_STACK_SECTION static uint8_t wt606_thread_stack[WT606_TASK_STACK_SIZE];
-BUFFER_SECTION static uint8_t     data_buffer[128];
+BUFFER_SECTION static uint8_t     data_buffer[512];
 
 /**
  * @brief 校验和验证 — 累加帧头到 DATA4H 共10字节，取低8位与 SUM 字节比较
@@ -148,9 +148,9 @@ static void wt606_task_entry(ULONG arg)
     {
         if (wt606_device.initialized == 1)
         {
-            static uint8_t buf[64];
+            static uint8_t buf[256];
             uint32_t       rx_len;
-            if (BSP_UART_Read(wt606_device.uart_dev, buf, &rx_len, TX_WAIT_FOREVER) > 0)
+            if (BSP_UART_Read(wt606_device.uart_dev, buf, sizeof(buf), &rx_len, TX_WAIT_FOREVER) > 0)
             {
                 // 扫描帧头 0x55，需要至少11字节才能组成一帧
                 for (uint16_t i = 0; i + 10 < rx_len; i++)
@@ -207,7 +207,7 @@ void Module_WT606_Init(void)
         .huart           = &WT606_UART,
         .expected_rx_len = 0,
         .rx_buf          = data_buffer,
-        .rx_buf_size     = 128,
+        .rx_buf_size     = 512,
         .tx_mode         = UART_MODE_DMA,
         .rx_mode         = UART_MODE_DMA,
     };

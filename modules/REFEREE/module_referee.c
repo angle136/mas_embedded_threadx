@@ -48,10 +48,10 @@ static void referee_task_entry(ULONG arg)
             tx_thread_sleep(100);
             return;
         }
-        static uint8_t rx_buf[256];
+        static uint8_t rx_buf[512];
         uint32_t       rx_len = 0;
 
-        BSP_UART_Read(module_referee.uart_dev, rx_buf, &rx_len, TX_WAIT_FOREVER);
+        BSP_UART_Read(module_referee.uart_dev, rx_buf, sizeof(rx_buf), &rx_len, TX_WAIT_FOREVER);
         if (rx_len == 0) return;
 
         uint16_t       idx     = 0;
