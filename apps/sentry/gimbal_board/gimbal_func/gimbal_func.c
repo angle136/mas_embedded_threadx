@@ -69,7 +69,6 @@ void gimbal_init(void)
                                    .lqr_init =
                                        {
                                            .K         = {5.47f, 0.56f},
-                                           .max_out   = 2.223f,
                                            .state_dim = 2,
                                        }},
         .setting_init_config =
@@ -107,7 +106,6 @@ void gimbal_init(void)
                                    .lqr_init =
                                        {
                                            .K         = {22.36f, 3.15f},
-                                           .max_out   = 2.223f,
                                            .state_dim = 2,
                                        }},
         .setting_init_config =
@@ -148,7 +146,6 @@ void gimbal_init(void)
                                                 .lqr_init =
                                                     {
                                                         .K         = {38.72983346f, 2.84576645f}, // 28.7312f,2.5974f
-                                                        .max_out   = 10.0f,
                                                         .state_dim = 2,
                                                     },
                                             },

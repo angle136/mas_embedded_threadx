@@ -26,7 +26,7 @@ static const Chassis_Swerve_Config_s chassis_swerve_config = {
 void chassis_init(void)
 {
     PID_Init_Config_s config = {
-        .MaxOut = 10, .IntegralLimit = 0.01, .DeadBand = 1, .Kp = 0.3, .Ki = 0, .Kd = 0.001, .Improve = 0x01}; // enable integratiaon limit
+        .MaxOut = 5, .IntegralLimit = 0.01, .DeadBand = 10, .Kp = 0.1, .Ki = 0, .Kd = 0.001, .Improve = 0x01}; // enable integratiaon limit
     PIDInit(&chassis_follow_pid, &config);
 
     Motor_Init_Config_s chassis_motor_config = {
@@ -43,7 +43,6 @@ void chassis_init(void)
         .controller_init_config = {.lqr_init =
                                        {
                                            .K         = {0.008f},
-                                           .max_out   = 6.0f,
                                            .state_dim = 1,
                                        }},
         .setting_init_config =
@@ -59,32 +58,52 @@ void chassis_init(void)
 
     PowerCtrl_Param_t power_config = {.k1 = 0.132, .k2 = 3.47, .k3 = 1};
 
+    chassis_motor_config.transport_config.can.tx_id             = 1;
+    chassis_motor_config.setting_init_config.motor_reverse_flag = 0;
+    chassis_motor_config.offline_init_config.name               = "m3508_1";
+    chassis_motor_config.offline_init_config.beep_times         = 1;
+    chassis_motors[0]                                           = Motor_DJI_Init(&chassis_motor_config);
+    if (chassis_motors[0] == NULL)
+    {
+        LOG_E("chassis motor[0] init failed");
+        return;
+    }
+    PowerControl_Register(&chassis_motors[0]->base, PC_ROLE_DRIVE, power_config);
+
     chassis_motor_config.transport_config.can.tx_id             = 2;
     chassis_motor_config.setting_init_config.motor_reverse_flag = 0;
     chassis_motor_config.offline_init_config.name               = "m3508_2";
-    chassis_motor_config.offline_init_config.beep_times         = 1;
-    chassis_motors[0]                                           = Motor_DJI_Init(&chassis_motor_config);
-    PowerControl_Register(&chassis_motors[0]->base, PC_ROLE_DRIVE, power_config);
+    chassis_motor_config.offline_init_config.beep_times         = 2;
+    chassis_motors[1]                                           = Motor_DJI_Init(&chassis_motor_config);
+    if (chassis_motors[1] == NULL)
+    {
+        LOG_E("chassis motor[1] init failed");
+        return;
+    }
+    PowerControl_Register(&chassis_motors[1]->base, PC_ROLE_DRIVE, power_config);
 
     chassis_motor_config.transport_config.can.tx_id             = 3;
-    chassis_motor_config.setting_init_config.motor_reverse_flag = 0;
+    chassis_motor_config.setting_init_config.motor_reverse_flag = 1;
     chassis_motor_config.offline_init_config.name               = "m3508_3";
     chassis_motor_config.offline_init_config.beep_times         = 3;
-    chassis_motors[1]                                           = Motor_DJI_Init(&chassis_motor_config);
-    PowerControl_Register(&chassis_motors[1]->base, PC_ROLE_DRIVE, power_config);
+    chassis_motors[2]                                           = Motor_DJI_Init(&chassis_motor_config);
+    if (chassis_motors[2] == NULL)
+    {
+        LOG_E("chassis motor[2] init failed");
+        return;
+    }
+    PowerControl_Register(&chassis_motors[2]->base, PC_ROLE_DRIVE, power_config);
 
     chassis_motor_config.transport_config.can.tx_id             = 4;
     chassis_motor_config.setting_init_config.motor_reverse_flag = 1;
     chassis_motor_config.offline_init_config.name               = "m3508_4";
     chassis_motor_config.offline_init_config.beep_times         = 4;
-    chassis_motors[2]                                           = Motor_DJI_Init(&chassis_motor_config);
-    PowerControl_Register(&chassis_motors[2]->base, PC_ROLE_DRIVE, power_config);
-
-    chassis_motor_config.transport_config.can.tx_id             = 1;
-    chassis_motor_config.setting_init_config.motor_reverse_flag = 1;
-    chassis_motor_config.offline_init_config.name               = "m3508_1";
-    chassis_motor_config.offline_init_config.beep_times         = 1;
     chassis_motors[3]                                           = Motor_DJI_Init(&chassis_motor_config);
+    if (chassis_motors[3] == NULL)
+    {
+        LOG_E("chassis motor[3] init failed");
+        return;
+    }
     PowerControl_Register(&chassis_motors[3]->base, PC_ROLE_DRIVE, power_config);
 
     Motor_Init_Config_s gm6020_motor_config = {
@@ -101,7 +120,6 @@ void chassis_init(void)
         .controller_init_config = {.lqr_init =
                                        {
                                            .K         = {2.23f, 0.2f},
-                                           .max_out   = 2.23f,
                                            .state_dim = 2,
                                        }},
         .setting_init_config =
@@ -122,6 +140,11 @@ void chassis_init(void)
     gm6020_motor_config.offline_init_config.name               = "gm6020_1";
     gm6020_motor_config.offline_init_config.beep_times         = 5;
     chassis_motors[4]                                          = Motor_DJI_Init(&gm6020_motor_config);
+    if (chassis_motors[4] == NULL)
+    {
+        LOG_E("chassis motor[4] init failed");
+        return;
+    }
     PowerControl_Register(&chassis_motors[4]->base, PC_ROLE_STEER, gm6020_power_config);
 
     gm6020_motor_config.transport_config.can.tx_id             = 2;
@@ -129,6 +152,11 @@ void chassis_init(void)
     gm6020_motor_config.offline_init_config.name               = "gm6020_2";
     gm6020_motor_config.offline_init_config.beep_times         = 6;
     chassis_motors[5]                                          = Motor_DJI_Init(&gm6020_motor_config);
+    if (chassis_motors[5] == NULL)
+    {
+        LOG_E("chassis motor[5] init failed");
+        return;
+    }
     PowerControl_Register(&chassis_motors[5]->base, PC_ROLE_STEER, gm6020_power_config);
 
     gm6020_motor_config.transport_config.can.tx_id             = 3;
@@ -136,6 +164,11 @@ void chassis_init(void)
     gm6020_motor_config.offline_init_config.name               = "gm6020_3";
     gm6020_motor_config.offline_init_config.beep_times         = 7;
     chassis_motors[6]                                          = Motor_DJI_Init(&gm6020_motor_config);
+    if (chassis_motors[6] == NULL)
+    {
+        LOG_E("chassis motor[6] init failed");
+        return;
+    }
     PowerControl_Register(&chassis_motors[6]->base, PC_ROLE_STEER, gm6020_power_config);
 
     gm6020_motor_config.transport_config.can.tx_id             = 4;
@@ -143,9 +176,14 @@ void chassis_init(void)
     gm6020_motor_config.offline_init_config.name               = "gm6020_4";
     gm6020_motor_config.offline_init_config.beep_times         = 8;
     chassis_motors[7]                                          = Motor_DJI_Init(&gm6020_motor_config);
+    if (chassis_motors[7] == NULL)
+    {
+        LOG_E("chassis motor[7] init failed");
+        return;
+    }
     PowerControl_Register(&chassis_motors[7]->base, PC_ROLE_STEER, gm6020_power_config);
 
-    PowerControl_SetLimit(120,60,0);
+    PowerControl_SetLimit(120, 60, 0);
 
     LOG_I("Chassis initialized");
 }
@@ -193,7 +231,7 @@ void chassis_func(Chassis_Ctrl_Cmd_t *chassis_cmd)
                 chassis_wz = -8;
                 break;
             case chassis_follow_gimbal_yaw: // 跟随云台
-                PIDCalculate(&chassis_follow_pid, chassis_cmd->offset_angle * DEGREE_2_RAD, 0);
+                PIDCalculate(&chassis_follow_pid, chassis_cmd->offset_angle, 0);
                 chassis_wz = chassis_follow_pid.Output;
                 break;
             case chassis_rotate: // 自旋,同时保持全向机动
@@ -202,7 +240,7 @@ void chassis_func(Chassis_Ctrl_Cmd_t *chassis_cmd)
             case chassis_automode:
             {
                 const game_status_t *game_status = (game_status_t *)Module_Referee_Get_cmd_data(CMD_ID_GAME_STATUS);
-                if (game_status->type_progress.game_progress == 4) // 比赛中
+                if (game_status != NULL && game_status->type_progress.game_progress == 4) // 比赛中
                 {
                 }
                 else
@@ -220,11 +258,11 @@ void chassis_func(Chassis_Ctrl_Cmd_t *chassis_cmd)
             // 根据云台和底盘的角度offset将控制量映射到底盘坐标系上
             // 底盘逆时针旋转为角度正方向;云台命令的方向以云台指向的方向为x,采用右手系
             static float sin_theta, cos_theta;
-            float        total_angle = chassis_cmd->offset_angle;
-            cos_theta                = arm_cos_f32(total_angle);
-            sin_theta                = arm_sin_f32(total_angle);
-            chassis_vx               = chassis_cmd->vx * cos_theta - chassis_cmd->vy * sin_theta;
-            chassis_vy               = chassis_cmd->vx * sin_theta + chassis_cmd->vy * cos_theta;
+            float        total_angle_rad = chassis_cmd->offset_angle * DEGREE_2_RAD;
+            cos_theta                    = arm_cos_f32(total_angle_rad);
+            sin_theta                    = arm_sin_f32(total_angle_rad);
+            chassis_vx                   = chassis_cmd->vx * cos_theta - chassis_cmd->vy * sin_theta;
+            chassis_vy                   = chassis_cmd->vx * sin_theta + chassis_cmd->vy * cos_theta;
 
             Chassis_Swerve_Calc(chassis_motors, &chassis_swerve_config, chassis_vx, chassis_vy, chassis_wz);
         }

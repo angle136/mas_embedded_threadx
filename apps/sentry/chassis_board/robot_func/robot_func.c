@@ -8,6 +8,8 @@ void handle_referee_data(ChassisToGimbal_referee_t *referee_data)
     const allowed_bullet_t  *allowed_bullet  = (allowed_bullet_t *)Module_Referee_Get_cmd_data(CMD_ID_ALLOWED_BULLET);
     const game_status_t     *game_status     = (game_status_t *)Module_Referee_Get_cmd_data(CMD_ID_GAME_STATUS);
     const power_heat_data_t *power_heat_data = (power_heat_data_t *)Module_Referee_Get_cmd_data(CMD_ID_POWER_HEAT_DATA);
+    if (!robot_status || !allowed_bullet || !game_status || !power_heat_data) return;
+
     // 红方id为1-7，蓝方id为101-107
     if (robot_status->robot_id >= 100)
     {

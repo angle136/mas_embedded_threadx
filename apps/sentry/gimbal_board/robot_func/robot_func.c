@@ -30,9 +30,18 @@ void RemoteControlSet(Chassis_Ctrl_Cmd_t *Chassis_Ctrl, Shoot_Ctrl_Cmd_t *Shoot_
     /* RC 在线 */
     if (state & 0x01)
     {
-        /* 摇杆 → 底盘速度 (通用) */
-        Chassis_Ctrl->vx = 0.004f * (float)Module_Remote_get_channel(1);
-        Chassis_Ctrl->vy = -0.004f * (float)Module_Remote_get_channel(2);
+        /* 摇杆 → 速度比例 (-1.0 ~ +1.0)
+         * SBUS 通道值: 中位 1024, 上 240, 下 1807 → 零偏后 -784 ~ +783 */
+        Chassis_Ctrl->vx = (float)Module_Remote_get_channel(2) / (float)(SBUS_CHX_DOWN - SBUS_CHX_BIAS);
+        Chassis_Ctrl->vy = (float)Module_Remote_get_channel(1) / (float)(SBUS_CHX_DOWN - SBUS_CHX_BIAS);
+
+        int16_t ch8 = Module_Remote_get_channel(8);
+        if (ch8 == SBUS_CHX_UP)
+            Chassis_Ctrl->chassis_mode = chassis_follow_gimbal_yaw;
+        else if (ch8 == SBUS_CHX_BIAS)
+            Chassis_Ctrl->chassis_mode = chassis_rotate;
+        else if (ch8 == SBUS_CHX_DOWN)
+            Chassis_Ctrl->chassis_mode = chassis_rotate_reverse;
 
         int16_t ch6 = Module_Remote_get_channel(6);
         if (ch6 == SBUS_CHX_UP)
@@ -49,10 +58,11 @@ void RemoteControlSet(Chassis_Ctrl_Cmd_t *Chassis_Ctrl, Shoot_Ctrl_Cmd_t *Shoot_
         }
         else if (ch6 == SBUS_CHX_DOWN)
         {
-            Gimbal_Ctrl->gimbal_mode  = gimbal_zero_force;
-            Shoot_Ctrl->shoot_mode    = shoot_off;
-            Shoot_Ctrl->friction_mode = friction_off;
-            Shoot_Ctrl->load_mode     = load_stop;
+            Chassis_Ctrl->chassis_mode = chassis_zero_force;
+            Gimbal_Ctrl->gimbal_mode   = gimbal_zero_force;
+            Shoot_Ctrl->shoot_mode     = shoot_off;
+            Shoot_Ctrl->friction_mode  = friction_off;
+            Shoot_Ctrl->load_mode      = load_stop;
         }
 
         // 发射机构控制部分
@@ -80,14 +90,6 @@ void RemoteControlSet(Chassis_Ctrl_Cmd_t *Chassis_Ctrl, Shoot_Ctrl_Cmd_t *Shoot_
             else if (ch7 == SBUS_CHX_DOWN)
                 Shoot_Ctrl->load_mode = load_burstfire;
         }
-
-        int16_t ch8 = Module_Remote_get_channel(8);
-        if (ch8 == SBUS_CHX_UP)
-            Chassis_Ctrl->chassis_mode = chassis_follow_gimbal_yaw;
-        else if (ch8 == SBUS_CHX_BIAS)
-            Chassis_Ctrl->chassis_mode = chassis_rotate;
-        else if (ch8 == SBUS_CHX_DOWN)
-            Chassis_Ctrl->chassis_mode = chassis_rotate_reverse;
     }
     else
     {

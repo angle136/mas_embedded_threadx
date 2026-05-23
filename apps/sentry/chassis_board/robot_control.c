@@ -36,11 +36,12 @@ static void robot_control_task(ULONG thread_input)
         }
         else
         {
-            chassis_cmd.vx           = chassis_recv_cmd.vx;
-            chassis_cmd.vy           = chassis_recv_cmd.vy;
-            chassis_cmd.wz           = chassis_recv_cmd.wz;
-            // 编码器差值 → 弧度: (ecd / 8191) * 2π
-            chassis_cmd.offset_angle = (float)chassis_recv_cmd.offset_angle * (2.0f * 3.14159265354f) / 8191.0f;
+            // 板间 int8 (-10~+10) → 实际速度 (m/s)
+            chassis_cmd.vx           = (float)chassis_recv_cmd.vx / 10.0f * CHASSIS_MAX_SPEED_MPS;
+            chassis_cmd.vy           = (float)chassis_recv_cmd.vy / 10.0f * CHASSIS_MAX_SPEED_MPS;
+            chassis_cmd.wz           = (float)chassis_recv_cmd.wz / 10.0f * CHASSIS_MAX_SPEED_MPS;
+            // 编码器差值 → 角度: ecd / 8191 * 360
+            chassis_cmd.offset_angle = (float)chassis_recv_cmd.offset_angle * 360.0f / 8191.0f;
             chassis_cmd.chassis_mode = chassis_recv_cmd.chassis_mode;
         }
 

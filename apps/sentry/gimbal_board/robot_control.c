@@ -53,9 +53,10 @@ static void robot_control_task(ULONG thread_input)
         shoot_func(&shoot_cmd);
 
         /* 板间通讯 */
-        chassis_send_cmd.vx           = chassis_cmd.vx;
-        chassis_send_cmd.vy           = chassis_cmd.vy;
-        chassis_send_cmd.wz           = chassis_cmd.wz;
+        // 速度比例 (-1.0~+1.0) → 板间 int8 (-10~+10)
+        chassis_send_cmd.vx           = (int8_t)(chassis_cmd.vx * 10.0f);
+        chassis_send_cmd.vy           = (int8_t)(chassis_cmd.vy * 10.0f);
+        chassis_send_cmd.wz           = (int8_t)(chassis_cmd.wz * 10.0f);
         chassis_send_cmd.offset_angle = CalcOffsetAngle(yaw_ecd);
         chassis_send_cmd.chassis_mode = chassis_cmd.chassis_mode;
         Module_BoardComm_Send((uint8_t *)&chassis_send_cmd, sizeof(GimbalToChassis_cmd_t));

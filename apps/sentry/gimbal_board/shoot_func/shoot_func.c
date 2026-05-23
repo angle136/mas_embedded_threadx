@@ -30,7 +30,6 @@ void shoot_init(void)
         .controller_init_config = {.lqr_init =
                                        {
                                            .K         = {0.0011f},
-                                           .max_out   = 6.0f,
                                            .state_dim = 1,
                                        }},
         .setting_init_config =
@@ -80,7 +79,6 @@ void shoot_init(void)
         .controller_init_config = {.lqr_init =
                                        {
                                            .K         = {0.005f}, // 0.0317
-                                           .max_out   = 1.8f,
                                            .state_dim = 1,
                                        }},
         .setting_init_config =
@@ -108,6 +106,8 @@ void shoot_init(void)
 }
 void shoot_func(Shoot_Ctrl_Cmd_t *shoot_cmd)
 {
+    if (!friction_l || !friction_r || !loader) return;
+
     if (shoot_cmd != NULL)
     {
         // 从cmd获取控制数据
