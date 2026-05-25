@@ -1,11 +1,3 @@
-/*
- * @Author: laladuduqq 2807523947@qq.com
- * @Date: 2025-09-15 09:30:21
- * @LastEditors: laladuduqq 2807523947@qq.com
- * @LastEditTime: 2026-05-10 18:32:14
- * @FilePath: /mas_embedded_threadx/modules/REMOTE/VT03/vt03.c
- * @Description:
- */
 #include "vt03.h"
 #include "bsp_def.h"
 #include "bsp_uart.h"
@@ -13,7 +5,6 @@
 #include "module_offline.h"
 #include "module_remote.h"
 #include <stdint.h>
-#include <string.h>
 #include <stdlib.h>
 #include "usart.h"
 
@@ -23,10 +14,13 @@
 
 #if defined(REMOTE_VT_SOURCE) && (REMOTE_VT_SOURCE == 2)
 
-/* 模块内部变量 */
-BUFFER_SECTION static uint8_t vt03_rx_buf[64];  /* 接收缓冲区 */
-static UART_Device           *vt03_uart;        /* UART 设备 */
-static bool                   vt03_initialized; /* 初始化标志 */
+#define VT03_FRAME_SIZE 21
+#define VT03_HEADER0    0xA9
+#define VT03_HEADER1    0x53
+
+BUFFER_SECTION static uint8_t vt03_rx_buf[64];
+static UART_Device           *vt03_uart;
+static bool                   vt03_initialized;
 
 int8_t remote_vt03_init(Offline_Device **out_offline)
 {
@@ -53,7 +47,7 @@ int8_t remote_vt03_init(Offline_Device **out_offline)
 
     UART_Device_init_config uart_cfg = {
         .huart           = &REMOTE_VT_UART,
-        .expected_rx_len = 21,
+        .expected_rx_len = VT03_FRAME_SIZE,
         .rx_buf          = vt03_rx_buf,
         .rx_buf_size     = 64,
         .rx_mode         = UART_MODE_DMA,
@@ -68,74 +62,76 @@ int8_t remote_vt03_init(Offline_Device **out_offline)
 
     vt03_initialized = true;
     LOG_I("vt03 init success");
-    return TX_SUCCESS;
+    return 0;
 }
 
 void remote_vt03_decode(Remote_Data_t *data, Offline_Device *offline)
 {
     if (!vt03_initialized || !data) return;
 
-    static uint8_t buf[32];
+    static uint8_t buf[64];
     uint32_t       rx_len;
-    int            ret = BSP_UART_Read(vt03_uart, buf, sizeof(buf), &rx_len, TX_WAIT_FOREVER);
-    if (ret <= 0 || rx_len != 21) return;
+    if (BSP_UART_Read(vt03_uart, buf, sizeof(buf), &rx_len, TX_WAIT_FOREVER) <= 0) return;
 
-    /* 帧头校验 */
-    if (buf[0] != 0xA9 || buf[1] != 0x53) return;
-
-    /* CRC16 校验 */
-    if (Verify_CRC16_Check_Sum(buf, 21) != RM_TRUE) return;
-
-    /* 摇杆通道解码 (零偏 + 死区)  */
-    int16_t ch1 = (buf[2] | (buf[3] << 8)) & 0x07FF;
-    int16_t ch2 = ((buf[3] >> 3) | (buf[4] << 5)) & 0x07FF;
-    int16_t ch3 = ((buf[4] >> 6) | (buf[5] << 2) | (buf[6] << 10)) & 0x07FF;
-    int16_t ch4 = ((buf[6] >> 1) | (buf[7] << 7)) & 0x07FF;
-
-    if (ch1 < VT03_CH_VALUE_MIN || ch1 > VT03_CH_VALUE_MAX || ch2 < VT03_CH_VALUE_MIN || ch2 > VT03_CH_VALUE_MAX || ch3 < VT03_CH_VALUE_MIN ||
-        ch3 > VT03_CH_VALUE_MAX || ch4 < VT03_CH_VALUE_MIN || ch4 > VT03_CH_VALUE_MAX)
+    for (uint32_t i = 0; i + VT03_FRAME_SIZE - 1 < rx_len; i++)
     {
-        return;
+        /* 帧头校验 */
+        if (buf[i] != VT03_HEADER0 || buf[i + 1] != VT03_HEADER1) continue;
+
+        /* CRC16 校验 */
+        if (Verify_CRC16_Check_Sum(&buf[i], VT03_FRAME_SIZE) != RM_TRUE) continue;
+
+        /* 摇杆通道解码 (零偏 + 死区)  */
+        int16_t ch1 = (buf[i + 2] | (buf[i + 3] << 8)) & 0x07FF;
+        int16_t ch2 = ((buf[i + 3] >> 3) | (buf[i + 4] << 5)) & 0x07FF;
+        int16_t ch3 = ((buf[i + 4] >> 6) | (buf[i + 5] << 2) | (buf[i + 6] << 10)) & 0x07FF;
+        int16_t ch4 = ((buf[i + 6] >> 1) | (buf[i + 7] << 7)) & 0x07FF;
+
+        if (ch1 < VT03_CH_VALUE_MIN || ch1 > VT03_CH_VALUE_MAX || ch2 < VT03_CH_VALUE_MIN || ch2 > VT03_CH_VALUE_MAX || ch3 < VT03_CH_VALUE_MIN ||
+            ch3 > VT03_CH_VALUE_MAX || ch4 < VT03_CH_VALUE_MIN || ch4 > VT03_CH_VALUE_MAX)
+        {
+            continue;
+        }
+
+        data->channels[0] = ch1 - VT03_CH_VALUE_OFFSET;
+        data->channels[1] = ch2 - VT03_CH_VALUE_OFFSET;
+        data->channels[2] = ch3 - VT03_CH_VALUE_OFFSET;
+        data->channels[3] = ch4 - VT03_CH_VALUE_OFFSET;
+
+        if (abs(data->channels[0]) <= REMOTE_DEAD_ZONE) data->channels[0] = 0;
+        if (abs(data->channels[1]) <= REMOTE_DEAD_ZONE) data->channels[1] = 0;
+        if (abs(data->channels[2]) <= REMOTE_DEAD_ZONE) data->channels[2] = 0;
+        if (abs(data->channels[3]) <= REMOTE_DEAD_ZONE) data->channels[3] = 0;
+
+        /* 滚轮 */
+        int16_t wheel = ((buf[i + 8] >> 1) | (buf[i + 9] << 7)) & 0x07FF;
+        wheel -= VT03_CH_VALUE_OFFSET;
+        data->vt03.wheel = wheel;
+
+        /* 按键 */
+        data->vt03.switch_pos   = (buf[i + 7] >> 4) & 0x03;
+        data->vt03.pause        = (buf[i + 7] >> 6) & 0x01;
+        data->vt03.custom_left  = (buf[i + 7] >> 7) & 0x01;
+        data->vt03.custom_right = (buf[i + 8] >> 0) & 0x01;
+        data->vt03.trigger      = (buf[i + 9] >> 4) & 0x01;
+
+        /* 鼠标 */
+        data->mouse.mouse_x = (int16_t)(buf[i + 10] | (buf[i + 11] << 8));
+        data->mouse.mouse_y = (int16_t)(buf[i + 12] | (buf[i + 13] << 8));
+        data->mouse.mouse_z = (int16_t)(buf[i + 14] | (buf[i + 15] << 8));
+        data->mouse.mouse_l = buf[i + 16] & 0x03;
+        data->mouse.mouse_r = (buf[i + 16] >> 2) & 0x03;
+        data->mouse.mouse_m = (buf[i + 16] >> 4) & 0x03;
+
+        if (data->mouse.mouse_x < -32768 || data->mouse.mouse_x > 32767) data->mouse.mouse_x = 0;
+        if (data->mouse.mouse_y < -32768 || data->mouse.mouse_y > 32767) data->mouse.mouse_y = 0;
+        if (data->mouse.mouse_z < -32768 || data->mouse.mouse_z > 32767) data->mouse.mouse_z = 0;
+
+        /* 键盘 */
+        data->keyboard.key_code = buf[i + 17] | (buf[i + 18] << 8);
+
+        if (offline) Module_Offline_device_update(offline);
     }
-
-    data->channels[0] = ch1 - VT03_CH_VALUE_OFFSET;
-    data->channels[1] = ch2 - VT03_CH_VALUE_OFFSET;
-    data->channels[2] = ch3 - VT03_CH_VALUE_OFFSET;
-    data->channels[3] = ch4 - VT03_CH_VALUE_OFFSET;
-
-    if (abs(data->channels[0]) <= REMOTE_DEAD_ZONE) data->channels[0] = 0;
-    if (abs(data->channels[1]) <= REMOTE_DEAD_ZONE) data->channels[1] = 0;
-    if (abs(data->channels[2]) <= REMOTE_DEAD_ZONE) data->channels[2] = 0;
-    if (abs(data->channels[3]) <= REMOTE_DEAD_ZONE) data->channels[3] = 0;
-
-    /* 滚轮 */
-    int16_t wheel = ((buf[8] >> 1) | (buf[9] << 7)) & 0x07FF;
-    wheel -= VT03_CH_VALUE_OFFSET;
-    data->vt03.wheel = wheel;
-
-    /* 按键 */
-    data->vt03.switch_pos   = (buf[7] >> 4) & 0x03;
-    data->vt03.pause        = (buf[7] >> 6) & 0x01;
-    data->vt03.custom_left  = (buf[7] >> 7) & 0x01;
-    data->vt03.custom_right = (buf[8] >> 0) & 0x01;
-    data->vt03.trigger      = (buf[9] >> 4) & 0x01;
-
-    /* 鼠标 */
-    data->mouse.mouse_x = (int16_t)(buf[10] | (buf[11] << 8));
-    data->mouse.mouse_y = (int16_t)(buf[12] | (buf[13] << 8));
-    data->mouse.mouse_z = (int16_t)(buf[14] | (buf[15] << 8));
-    data->mouse.mouse_l = buf[16] & 0x03;
-    data->mouse.mouse_r = (buf[16] >> 2) & 0x03;
-    data->mouse.mouse_m = (buf[16] >> 4) & 0x03;
-
-    if (data->mouse.mouse_x < -32768 || data->mouse.mouse_x > 32767) data->mouse.mouse_x = 0;
-    if (data->mouse.mouse_y < -32768 || data->mouse.mouse_y > 32767) data->mouse.mouse_y = 0;
-    if (data->mouse.mouse_z < -32768 || data->mouse.mouse_z > 32767) data->mouse.mouse_z = 0;
-
-    /* 键盘 */
-    data->keyboard.key_code = buf[17] | (buf[18] << 8);
-
-    if (offline) Module_Offline_device_update(offline);
 }
 
 #else

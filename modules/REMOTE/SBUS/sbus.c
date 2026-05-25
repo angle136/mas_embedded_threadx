@@ -13,10 +13,13 @@
 
 #if defined(REMOTE_SOURCE) && (REMOTE_SOURCE == 1)
 
-/* 内部变量 */
-BUFFER_SECTION static uint8_t sbus_rx_buf[64];  /* 接收缓冲区 */
-static UART_Device           *sbus_uart;        /* UART 设备 */
-static bool                   sbus_initialized; /* 初始化标志 */
+#define SBUS_FRAME_SIZE 25
+#define SBUS_HEADER     0x0F
+#define SBUS_TAIL       0x00
+
+BUFFER_SECTION static uint8_t sbus_rx_buf[64];
+static UART_Device           *sbus_uart;
+static bool                   sbus_initialized;
 
 int8_t remote_sbus_init(Offline_Device **out_offline)
 {
@@ -43,7 +46,7 @@ int8_t remote_sbus_init(Offline_Device **out_offline)
 
     UART_Device_init_config uart_cfg = {
         .huart           = &REMOTE_UART,
-        .expected_rx_len = 25,
+        .expected_rx_len = SBUS_FRAME_SIZE,
         .rx_buf          = sbus_rx_buf,
         .rx_buf_size     = 64,
         .rx_mode         = UART_MODE_DMA,
@@ -65,57 +68,58 @@ void remote_sbus_decode(Remote_Data_t *data, Offline_Device *offline)
 {
     if (!sbus_initialized || !data) return;
 
-    static uint8_t buf[32];
+    static uint8_t buf[64];
     uint32_t       rx_len;
-    int            ret = BSP_UART_Read(sbus_uart, buf, sizeof(buf), &rx_len, TX_WAIT_FOREVER);
-    if (ret <= 0) return;
+    if (BSP_UART_Read(sbus_uart, buf, sizeof(buf), &rx_len, TX_WAIT_FOREVER) <= 0) return;
 
-    /* 校验帧头 / 帧尾 / 长度 */
-    if (buf[0] != 0x0F || buf[24] != 0x00 || rx_len != 25) return;
-
-    /* 通道解码 (ch1-4 做零偏 + 死区) */
-    int16_t ch1 = ((int16_t)buf[1] >> 0 | ((int16_t)buf[2] << 8)) & 0x07FF;
-    int16_t ch2 = ((int16_t)buf[2] >> 3 | ((int16_t)buf[3] << 5)) & 0x07FF;
-    int16_t ch3 = ((int16_t)buf[3] >> 6 | ((int16_t)buf[4] << 2) | (int16_t)buf[5] << 10) & 0x07FF;
-    int16_t ch4 = ((int16_t)buf[5] >> 1 | ((int16_t)buf[6] << 7)) & 0x07FF;
-
-    if (ch1 < SBUS_CHX_UP || ch1 > SBUS_CHX_DOWN) ch1 = SBUS_CHX_BIAS;
-    if (ch2 < SBUS_CHX_UP || ch2 > SBUS_CHX_DOWN) ch2 = SBUS_CHX_BIAS;
-    if (ch3 < SBUS_CHX_UP || ch3 > SBUS_CHX_DOWN) ch3 = SBUS_CHX_BIAS;
-    if (ch4 < SBUS_CHX_UP || ch4 > SBUS_CHX_DOWN) ch4 = SBUS_CHX_BIAS;
-
-    ch1 -= SBUS_CHX_BIAS;
-    ch2 -= SBUS_CHX_BIAS;
-    ch3 -= SBUS_CHX_BIAS;
-    ch4 -= SBUS_CHX_BIAS;
-
-    if (abs(ch1) <= REMOTE_DEAD_ZONE) ch1 = 0;
-    if (abs(ch2) <= REMOTE_DEAD_ZONE) ch2 = 0;
-    if (abs(ch3) <= REMOTE_DEAD_ZONE) ch3 = 0;
-    if (abs(ch4) <= REMOTE_DEAD_ZONE) ch4 = 0;
-
-    data->channels[0] = ch1;
-    data->channels[1] = ch2;
-    data->channels[2] = ch3;
-    data->channels[3] = ch4;
-
-    /* 扩展通道 (ch5-16, 原始值) */
-    data->channels[4]  = (int16_t)(((int16_t)buf[6] >> 4 | ((int16_t)buf[7] << 4)) & 0x07FF);
-    data->channels[5]  = (int16_t)(((int16_t)buf[7] >> 7 | ((int16_t)buf[8] << 1) | (int16_t)buf[9] << 9) & 0x07FF);
-    data->channels[6]  = (int16_t)(((int16_t)buf[9] >> 2 | ((int16_t)buf[10] << 6)) & 0x07FF);
-    data->channels[7]  = (int16_t)(((int16_t)buf[10] >> 5 | ((int16_t)buf[11] << 3)) & 0x07FF);
-    data->channels[8]  = (int16_t)(((int16_t)buf[12] << 0 | ((int16_t)buf[13] << 8)) & 0x07FF);
-    data->channels[9]  = (int16_t)(((int16_t)buf[13] >> 3 | ((int16_t)buf[14] << 5)) & 0x07FF);
-    data->channels[10] = (int16_t)(((int16_t)buf[14] >> 6 | ((int16_t)buf[15] << 2) | (int16_t)buf[16] << 10) & 0x07FF);
-    data->channels[11] = (int16_t)(((int16_t)buf[16] >> 1 | ((int16_t)buf[17] << 7)) & 0x07FF);
-    data->channels[12] = (int16_t)(((int16_t)buf[17] >> 4 | ((int16_t)buf[18] << 4)) & 0x07FF);
-    data->channels[13] = (int16_t)(((int16_t)buf[18] >> 7 | ((int16_t)buf[19] << 1) | (int16_t)buf[20] << 9) & 0x07FF);
-    data->channels[14] = (int16_t)(((int16_t)buf[20] >> 2 | ((int16_t)buf[21] << 6)) & 0x07FF);
-    data->channels[15] = (int16_t)(((int16_t)buf[21] >> 5 | ((int16_t)buf[22] << 3)) & 0x07FF);
-
-    if (buf[23] == 0x00)
+    for (uint32_t i = 0; i + SBUS_FRAME_SIZE - 1 < rx_len; i++)
     {
-        if (offline) Module_Offline_device_update(offline);
+        /* 校验帧头 / 帧尾 / 长度 */
+        if (buf[i] != SBUS_HEADER) continue;
+        if (buf[i + SBUS_FRAME_SIZE - 1] != SBUS_TAIL) continue;
+        /* 通道解码 (ch1-4 做零偏 + 死区) */
+        int16_t ch1 = ((int16_t)buf[i + 1] >> 0 | ((int16_t)buf[i + 2] << 8)) & 0x07FF;
+        int16_t ch2 = ((int16_t)buf[i + 2] >> 3 | ((int16_t)buf[i + 3] << 5)) & 0x07FF;
+        int16_t ch3 = ((int16_t)buf[i + 3] >> 6 | ((int16_t)buf[i + 4] << 2) | (int16_t)buf[i + 5] << 10) & 0x07FF;
+        int16_t ch4 = ((int16_t)buf[i + 5] >> 1 | ((int16_t)buf[i + 6] << 7)) & 0x07FF;
+
+        if (ch1 < SBUS_CHX_UP || ch1 > SBUS_CHX_DOWN) ch1 = SBUS_CHX_BIAS;
+        if (ch2 < SBUS_CHX_UP || ch2 > SBUS_CHX_DOWN) ch2 = SBUS_CHX_BIAS;
+        if (ch3 < SBUS_CHX_UP || ch3 > SBUS_CHX_DOWN) ch3 = SBUS_CHX_BIAS;
+        if (ch4 < SBUS_CHX_UP || ch4 > SBUS_CHX_DOWN) ch4 = SBUS_CHX_BIAS;
+
+        ch1 -= SBUS_CHX_BIAS;
+        ch2 -= SBUS_CHX_BIAS;
+        ch3 -= SBUS_CHX_BIAS;
+        ch4 -= SBUS_CHX_BIAS;
+
+        if (abs(ch1) <= REMOTE_DEAD_ZONE) ch1 = 0;
+        if (abs(ch2) <= REMOTE_DEAD_ZONE) ch2 = 0;
+        if (abs(ch3) <= REMOTE_DEAD_ZONE) ch3 = 0;
+        if (abs(ch4) <= REMOTE_DEAD_ZONE) ch4 = 0;
+
+        data->channels[0] = ch1;
+        data->channels[1] = ch2;
+        data->channels[2] = ch3;
+        data->channels[3] = ch4;
+        /* 扩展通道 (ch5-16, 原始值) */
+        data->channels[4]  = (int16_t)(((int16_t)buf[i + 6] >> 4 | ((int16_t)buf[i + 7] << 4)) & 0x07FF);
+        data->channels[5]  = (int16_t)(((int16_t)buf[i + 7] >> 7 | ((int16_t)buf[i + 8] << 1) | (int16_t)buf[i + 9] << 9) & 0x07FF);
+        data->channels[6]  = (int16_t)(((int16_t)buf[i + 9] >> 2 | ((int16_t)buf[i + 10] << 6)) & 0x07FF);
+        data->channels[7]  = (int16_t)(((int16_t)buf[i + 10] >> 5 | ((int16_t)buf[i + 11] << 3)) & 0x07FF);
+        data->channels[8]  = (int16_t)(((int16_t)buf[i + 12] << 0 | ((int16_t)buf[i + 13] << 8)) & 0x07FF);
+        data->channels[9]  = (int16_t)(((int16_t)buf[i + 13] >> 3 | ((int16_t)buf[i + 14] << 5)) & 0x07FF);
+        data->channels[10] = (int16_t)(((int16_t)buf[i + 14] >> 6 | ((int16_t)buf[i + 15] << 2) | (int16_t)buf[i + 16] << 10) & 0x07FF);
+        data->channels[11] = (int16_t)(((int16_t)buf[i + 16] >> 1 | ((int16_t)buf[i + 17] << 7)) & 0x07FF);
+        data->channels[12] = (int16_t)(((int16_t)buf[i + 17] >> 4 | ((int16_t)buf[i + 18] << 4)) & 0x07FF);
+        data->channels[13] = (int16_t)(((int16_t)buf[i + 18] >> 7 | ((int16_t)buf[i + 19] << 1) | (int16_t)buf[i + 20] << 9) & 0x07FF);
+        data->channels[14] = (int16_t)(((int16_t)buf[i + 20] >> 2 | ((int16_t)buf[i + 21] << 6)) & 0x07FF);
+        data->channels[15] = (int16_t)(((int16_t)buf[i + 21] >> 5 | ((int16_t)buf[i + 22] << 3)) & 0x07FF);
+
+        if (buf[i + 23] == 0x00)
+        {
+            if (offline) Module_Offline_device_update(offline);
+        }
     }
 }
 

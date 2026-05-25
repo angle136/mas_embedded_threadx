@@ -14,6 +14,10 @@ REMOTE 模块统一封装**遥控器**（SBUS / DT7）和**图传键鼠**（VT02
 │ (huart5/3)   │    │ (huart1/6)   │
 └──────┬───────┘    └──────┬───────┘
        │ DMA               │ DMA
+       │ (IDLE 中断)       │ (IDLE 中断)
+       ▼                   ▼
+  BSP_UART_Read()    BSP_UART_Read()
+       │                   │
        ▼                   ▼
   sbus_decode()       vt02_decode()
       or                    or
@@ -40,21 +44,21 @@ REMOTE 模块统一封装**遥控器**（SBUS / DT7）和**图传键鼠**（VT02
 
 ### 子模块封装模式
 
-每个子模块（SBUS / DT7 / VT02 / VT03）对外仅暴露两个函数，内部资源完全自持：
+各子模块对外仅暴露 `_init` / `_decode` 两个函数：
 
 ```
           sbus.h
    ┌─────────────────┐
    │ sbus_init()     │  ← 配置 UART / 注册 Offline
-   │ sbus_decode()   │  ← 阻塞读取一帧, 直接写入 Remote_Data_t
+   │ sbus_decode()   │  ← for 循环扫描, 直接写入 Remote_Data_t
    └─────────────────┘
           sbus.c
-   ┌─────────────────────────────┐
-   │ static UART_Device *uart;   │  (不对外暴露)
-   │ static OfflineDevice *off;  │
-   │ static uint8_t rx_buf[64];  │
-   │ static bool initialized;    │
-   └─────────────────────────────┘
+   ┌──────────────────────────────┐
+   │ static UART_Device *uart;    │
+   │ static uint8_t rx_buf[64];   │  DMA 接收缓冲区
+   │ static bool initialized;     │
+   │ static sbus_decode();        │
+   └──────────────────────────────┘
 ```
 
 ### `Remote_Data_t` 统一结构体
@@ -77,7 +81,7 @@ REMOTE 模块统一封装**遥控器**（SBUS / DT7）和**图传键鼠**（VT02
 | 子模块 | 波特率 | 帧长 | rx_buf | offline 超时 | 校验 |
 |--------|--------|------|--------|:---:|------|
 | SBUS | 100000 | 25 字节 | 64 B | 50 ms | 帧头 0x0F + 帧尾 0x00 |
-| DT7 | 100000 | 18 字节 | 64 B | 50 ms | 通道边界检查 |
+| DT7 | 100000 | 18 字节 | 64 B | 50 ms | 通道边界检查 (364..1684) |
 | VT02 | 115200 | 不定长 | 128 B | 100 ms | CRC8 (帧头 5 字节) |
 | VT03 | 921600 | 21 字节 | 64 B | 100 ms | 帧头 0xA9 0x53 + CRC16 |
 
@@ -90,7 +94,6 @@ void Module_Remote_init(void);
 ```c
 const Remote_Data_t *Module_Remote_get_data(void);
 ```
-
 
 ```c
 int16_t Module_Remote_get_channel(uint8_t ch);
@@ -208,3 +211,4 @@ if (abs(ch) <= REMOTE_DEAD_ZONE)  // 死区
 |------|------|------|
 | v1.0 | 2026-05-10 | 初始版本 |
 | v1.1 | 2026-05-23 | 适配最新bsp_uart |
+| v1.2 | 2026-05-24 | SBUS/DT7/VT03 改为 for 循环帧头扫描模式，支持多帧累积解码 |
