@@ -48,7 +48,7 @@ static void vision_thread_entry(ULONG arg)
 
 void Module_Vision_Init(void)
 {
-    Offline_Init_config_t offlineconfig = {.name = "minipc", .beep_times = 10, .enable = 1, .timeout_ms = 100};
+    Offline_Init_config_t offlineconfig = {.name = "minipc", .beep_times = 10, .enable = VISION_OFFLINE_ENABLE, .timeout_ms = 100};
     offline_dev                         = Module_Offline_register(&offlineconfig);
     if (offline_dev == NULL)
     {

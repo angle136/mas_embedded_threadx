@@ -2,7 +2,7 @@
  * @Author: laladuduqq 2807523947@qq.com
  * @Date: 2026-05-10 17:40:19
  * @LastEditors: laladuduqq 2807523947@qq.com
- * @LastEditTime: 2026-05-14 20:12:05
+ * @LastEditTime: 2026-05-25 21:43:18
  * @FilePath: /mas_embedded_threadx/modules/REMOTE/module_remote.h
  * @Description:
  */
@@ -39,6 +39,13 @@
 #define REMOTE_TASK_VT_PRIORITY 8 /* 图传任务优先级 */
 #endif
 
+/* 离线检测 */
+#ifndef REMOTE_OFFLINE_ENABLE
+#define REMOTE_OFFLINE_ENABLE 1 /* 遥控器离线检测 */
+#endif
+#ifndef REMOTE_VT_OFFLINE_ENABLE
+#define REMOTE_VT_OFFLINE_ENABLE 1 /* 图传离线检测 */
+#endif
 /* SBUS 通道值定义 */
 #define SBUS_CHX_BIAS        ((uint16_t)1024)
 #define SBUS_CHX_UP          ((uint16_t)240)

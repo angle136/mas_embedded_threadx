@@ -20,6 +20,10 @@
 #define BOARDCOMM_CAN BSP_CAN_HANDLE2
 #endif
 
+#ifndef BOARDCOMM_OFFLINE_ENABLE
+#define BOARDCOMM_OFFLINE_ENABLE 1 /* 离线检测开启 */
+#endif
+
 /**
  * @brief 板间通信接收回调原型
  * @param data 接收到的 CAN 数据（最多 8 字节）

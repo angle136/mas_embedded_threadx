@@ -221,7 +221,7 @@ void Module_WT606_Init(void)
     Offline_Init_config_t offlineconfig = {
         .name       = "wt606",
         .beep_times = 10,
-        .enable     = 1,
+        .enable     = WT606_OFFLINE_ENABLE,
         .timeout_ms = 100,
     };
     wt606_device.offline_dev = Module_Offline_register(&offlineconfig);

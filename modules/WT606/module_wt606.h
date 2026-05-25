@@ -31,6 +31,10 @@
 #define WT606_TASK_PRIORITY 8 /* 检测任务优先级 */
 #endif
 
+#ifndef WT606_OFFLINE_ENABLE
+#define WT606_OFFLINE_ENABLE 1 /* 是否开启离线检测 */
+#endif
+
 typedef struct
 {
     float   acc[3];               /* 加速度 (m/s²)    — 量程 ±16g, g=9.8 */

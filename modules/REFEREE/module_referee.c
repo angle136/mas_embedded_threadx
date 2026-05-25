@@ -158,7 +158,7 @@ void Module_Referee_Init()
         LOG_E("uart device init error");
         return;
     }
-    Offline_Init_config_t offlineconfig = {.name = "referee", .beep_times = 10, .enable = 1, .timeout_ms = 100};
+    Offline_Init_config_t offlineconfig = {.name = "referee", .beep_times = 10, .enable = REFEREE_OFFLINE_ENABLE, .timeout_ms = 100};
     module_referee.offline_dev          = Module_Offline_register(&offlineconfig);
     if (module_referee.offline_dev == NULL)
     {

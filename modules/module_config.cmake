@@ -24,6 +24,8 @@ set(REMOTE_DEAD_ZONE        10)     # 死区
 set(REMOTE_TASK_STACK_SIZE  1024)   # 任务栈大小
 set(REMOTE_TASK_PRIORITY    9)      # 任务优先级
 set(REMOTE_TASK_VT_PRIORITY 8)      # 图传串口任务优先级
+set(REMOTE_OFFLINE_ENABLE      1)   # 遥控器离线检测
+set(REMOTE_VT_OFFLINE_ENABLE   2)   # 图传离线检测
 
 # BMI088 默认参数
 set(BMI088_TEMP_ENABLE      0)      # 温度控制
@@ -37,22 +39,28 @@ set(INS_TASK_PRIORITY       7)      # 任务优先级
 set(REFEREE_UART            huart1) # 串口选择
 set(REFEREE_TASK_STACK_SIZE 1024)   # 任务栈大小
 set(REFEREE_TASK_PRIORITY   10)     # 任务优先级
+set(REFEREE_OFFLINE_ENABLE  1)      # 离线检测开启
 
 # SUPERCAP 默认参数
 set(SUPERCAP_CAN            BSP_CAN_HANDLE2) # CAN 句柄
+set(SUPERCAP_OFFLINE_ENABLE 1)      # 离线检测开启
 
 # WT606 默认参数
 set(WT606_UART              huart1) # 串口选择
 set(WT606_TASK_STACK_SIZE   1024)   # 任务栈大小
 set(WT606_TASK_PRIORITY     8)      # 任务优先级
+set(WT606_OFFLINE_ENABLE    1)      # 离线检测开启
 
 # MOTOR 默认参数
 set(MOTOR_TASK_STACK_SIZE   1024)   # 任务栈大小 
 set(MOTOR_TASK_PRIORITY     12)     # 任务优先级
+set(MOTOR_OFFLINE_ENABLE    1)      # 电机离线检测默认值
 
 # BOARDCOMM 默认参数
 set(BOARDCOMM_CAN           BSP_CAN_HANDLE2) # CAN 句柄  
+set(BOARDCOMM_OFFLINE_ENABLE 1)     # 离线检测开启
 
 # VISION 默认参数
 set(VISION_TASK_STACK_SIZE   1024)   # 任务栈大小
-set(VISION_TASK_PRIORITY     10)      # 任务优先级
+set(VISION_TASK_PRIORITY     10)     # 任务优先级
+set(VISION_OFFLINE_ENABLE    1)      # 离线检测开启

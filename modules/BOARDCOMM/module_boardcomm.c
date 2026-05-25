@@ -70,7 +70,7 @@ void Module_BoardComm_Init(void)
     Offline_Init_config_t offlineconfig = {
         .name       = "boardcomm",
         .beep_times = 10,
-        .enable     = 1,
+        .enable     = BOARDCOMM_OFFLINE_ENABLE,
         .timeout_ms = 100,
     };
     boardcomm_offline_dev = Module_Offline_register(&offlineconfig);

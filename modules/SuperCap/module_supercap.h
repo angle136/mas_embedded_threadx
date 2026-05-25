@@ -17,6 +17,10 @@
 #define SUPERCAP_CAN BSP_CAN_HANDLE2
 #endif
 
+#ifndef SUPERCAP_OFFLINE_ENABLE
+#define SUPERCAP_OFFLINE_ENABLE 1 /* 离线检测开启 */
+#endif
+
 #pragma pack(1)
 
 typedef struct

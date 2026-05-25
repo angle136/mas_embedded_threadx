@@ -32,7 +32,7 @@ void Module_SuperCap_Init(void)
         LOG_E("can device init failed");
         return;
     }
-    Offline_Init_config_t offline_manage_init = {.name = "supercap", .timeout_ms = 500, .beep_times = 10, .enable = 1};
+    Offline_Init_config_t offline_manage_init = {.name = "supercap", .timeout_ms = 500, .beep_times = 10, .enable = SUPERCAP_OFFLINE_ENABLE};
     module_supercap.offline_dev               = Module_Offline_register(&offline_manage_init);
     if (module_supercap.offline_dev == NULL)
     {

@@ -23,6 +23,10 @@
 #define REFEREE_TASK_PRIORITY 10
 #endif
 
+#ifndef REFEREE_OFFLINE_ENABLE
+#define REFEREE_OFFLINE_ENABLE 1 /* 离线检测开启 */
+#endif
+
 /**
  * @brief 初始化裁判系统模块
  */

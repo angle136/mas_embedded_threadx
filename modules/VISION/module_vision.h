@@ -18,6 +18,10 @@
 #define VISION_TASK_PRIORITY 10
 #endif
 
+#ifndef VISION_OFFLINE_ENABLE
+#define VISION_OFFLINE_ENABLE 1 /* 离线检测开启 */
+#endif
+
 #pragma pack(1)
 
 /* 发送包: MCU → 上位机 */

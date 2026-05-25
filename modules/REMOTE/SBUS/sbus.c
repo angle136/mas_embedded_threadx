@@ -34,7 +34,7 @@ int8_t remote_sbus_init(Offline_Device **out_offline)
         .name       = "sbus",
         .timeout_ms = 50,
         .beep_times = 0,
-        .enable     = 1,
+        .enable     = REMOTE_OFFLINE_ENABLE,
     };
     Offline_Device *offline = Module_Offline_register(&offline_cfg);
     if (offline == NULL)
