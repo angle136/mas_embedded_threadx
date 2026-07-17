@@ -55,6 +55,32 @@ typedef struct
     friction_mode_e friction_mode;
 } Shoot_Ctrl_Cmd_t;
 
+typedef enum
+{
+    sbus_switch_down = 0,
+    sbus_switch_mid,
+    sbus_switch_up,
+} sbus_switch_e;
+
+typedef struct
+{
+    uint32_t update_count;
+    uint8_t  remote_status;
+    uint8_t  rc_online;
+    int16_t  channels[16];
+    int16_t  sw1_raw;
+    int16_t  sw2_raw;
+    int16_t  wheel_raw;
+    uint8_t  sw1_pos;
+    uint8_t  sw2_pos;
+    float    gimbal_yaw;
+    float    gimbal_pitch;
+    uint8_t  gimbal_mode;
+    uint8_t  shoot_mode;
+    uint8_t  friction_mode;
+    uint8_t  load_mode;
+} Infantry4_Remote_Debug_t;
+
 #pragma pack()
 
 #endif
