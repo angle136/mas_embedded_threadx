@@ -1,0 +1,9 @@
+include(${CMAKE_CURRENT_LIST_DIR}/../../modules/module_config.cmake)
+
+set(MODULES_SINGLE OFFLINE REMOTE BMI088 INS MOTOR)
+
+set(OFFLINE_BEEP_ENABLE 0)
+
+set(REMOTE_UART      huart3)
+set(REMOTE_SOURCE    1)
+set(REMOTE_VT_SOURCE 0)
