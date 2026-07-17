@@ -11,6 +11,22 @@
 #define SBUS_WHEEL_DEAD_ZONE       160
 #define GIMBAL_CHANNEL_SCALE       0.001f
 
+/*
+ * Ozone 调试变量在本文件第 30 行：infantry4_remote_debug。
+ * 展开 infantry4_remote_debug 后重点观察以下字段：
+ * - rc_online：1 表示 SBUS 遥控器在线。
+ * - channels[0..15]：SBUS 第 1 到 16 通道数值。
+ * - sw1_raw / sw2_raw / wheel_raw：开关或旋钮原始通道值。
+ * - sw1_pos / sw2_pos：三段开关归一化结果，0=下，1=中，2=上。
+ * - update_count：主控线程运行时应持续递增。
+ * 通道约定：
+ * - ch1 / ch2：左摇杆，暂时不用，后面给底盘或保留。
+ * - ch3 / ch4：右摇杆，控制云台 yaw / pitch。
+ * - ch5：主安全拨杆。
+ * - ch6：发射/摩擦轮使能拨杆。
+ * - ch7：拨弹模式拨杆。
+ * - ch8：备用模式拨杆。
+ */
 volatile Infantry4_Remote_Debug_t infantry4_remote_debug;
 
 static sbus_switch_e sbus_switch_3pos(int16_t raw)
