@@ -10,15 +10,18 @@
  *   含义：遥控调试快照，集中观察通道值、开关位置和命令输出。
  * sw1_raw: 本文件后部的 RemoteControlSet() 内。
  *   含义：ch5 原始值，当前主安全开关。
+ * ch3/ch4: 本文件后部的 RemoteControlSet() 内。
+ *   含义：分别累计更新 pitch / yaw 目标角度。
  * wheel_raw: 本文件后部的 RemoteControlSet() 内。
  *   含义：ch7 去中心化后的值，当前用于拨弹/旋钮调试。
  * RemoteControlSet(): 本文件后部的核心入口。
- *   含义：本文件核心入口，决定安全停机、yaw 目标角度累计和发射命令。
+ *   含义：本文件核心入口，决定安全停机、yaw/pitch 目标角度累计和发射命令。
  */
 
 #include "robot_func.h"
 
 #include "module_remote.h"
+#include "user_lib.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -104,10 +107,11 @@ void RemoteControlSet(Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ct
     else
     {
         gimbal_ctrl->gimbal_mode = gimbal_gyro_mode;
-        gimbal_ctrl->pitch = 0.0f;
         if (sw1 == sbus_switch_mid)
         {
-            gimbal_ctrl->yaw -= 0.001f * (float)Module_Remote_get_channel(3);
+            gimbal_ctrl->yaw -= 0.001f * (float)Module_Remote_get_channel(4);
+            gimbal_ctrl->pitch += 0.001f * (float)Module_Remote_get_channel(3);
+            VAL_LIMIT(gimbal_ctrl->pitch, PITCH_MIN_ANGLE, PITCH_MAX_ANGLE);
         }
 
         shoot_ctrl->load_mode = load_stop;
