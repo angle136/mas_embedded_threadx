@@ -30,9 +30,9 @@
 #define LOG_LVL LOG_LVL_INFO
 #include "ulog_def.h"
 
-/* 首次联调且仍连线时，yaw 直控速度务必保持很小。 */
+/* 临时联调用较温和但可起转的 yaw 直控速度；若仍不动，再优先看 output/ecd，而不是继续盲目加速。 */
 #define TEMP_INFANTRY4_YAW_DIR_SIGN              1.0f
-#define TEMP_INFANTRY4_YAW_DIRECT_SPEED_RAD_PER_SEC 0.5f
+#define TEMP_INFANTRY4_YAW_DIRECT_SPEED_RAD_PER_SEC 6.0f
 
 static DJI_Motor_t *yaw_motor = NULL;
 
