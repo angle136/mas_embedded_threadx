@@ -16,6 +16,9 @@
 #define PITCH_MAX_ANGLE     40.0f
 #define PITCH_MIN_ANGLE     -20.0f
 
+#define YAW_CHASSIS_ALIGN_ECD 3878
+#define CHASSIS_MAX_SPEED_MPS 3.0f
+
 /* 发射机构机械参数，当前 yaw 联调阶段未实际使用，后续接入 loader/shoot 时复用。 */
 #define REDUCTION_RATIO_LOADER 36.0f
 #define ONE_BULLET_DELTA_ANGLE 60.0f
@@ -67,6 +70,24 @@ typedef struct
 
 typedef enum
 {
+    chassis_zero_force = 0,
+    chassis_follow_gimbal_yaw,
+    chassis_rotate,
+    chassis_rotate_reverse,
+    chassis_manual,
+} chassis_mode_e;
+
+typedef struct
+{
+    float          vx;
+    float          vy;
+    float          wz;
+    float          offset_angle;
+    chassis_mode_e chassis_mode;
+} Chassis_Ctrl_Cmd_t;
+
+typedef enum
+{
     sbus_switch_down = 0,
     sbus_switch_mid,
     sbus_switch_up,
@@ -90,6 +111,10 @@ typedef struct
     uint8_t  shoot_mode;     /* 当前写入 shoot_cmd.shoot_mode 的值。 */
     uint8_t  friction_mode;  /* 当前写入 shoot_cmd.friction_mode 的值。 */
     uint8_t  load_mode;      /* 当前写入 shoot_cmd.load_mode 的值。 */
+    float    chassis_vx;
+    float    chassis_vy;
+    float    chassis_offset_angle;
+    uint8_t  chassis_mode;
 } Infantry4_Remote_Debug_t;
 
 #pragma pack()

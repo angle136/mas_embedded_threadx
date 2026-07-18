@@ -32,6 +32,21 @@
 
 volatile Infantry4_Remote_Debug_t infantry4_remote_debug;
 
+int16_t CalcOffsetAngle(float getyawangle)
+{
+    float offset_ecd;
+
+    const float ECD_MAX  = 8191.0f;
+    const float ECD_HALF = 4095.5f;
+
+    offset_ecd = getyawangle - YAW_CHASSIS_ALIGN_ECD;
+
+    while (offset_ecd > ECD_HALF) offset_ecd -= ECD_MAX;
+    while (offset_ecd < -ECD_HALF) offset_ecd += ECD_MAX;
+
+    return (int16_t)offset_ecd;
+}
+
 static sbus_switch_e sbus_switch_3pos(int16_t raw)
 {
     if (raw < SBUS_SWITCH_DOWN_THRESHOLD) return sbus_switch_down;
@@ -45,7 +60,7 @@ static int16_t sbus_raw_centered(uint8_t ch)
     return Module_Remote_get_channel(ch) - (int16_t)SBUS_CHX_BIAS;
 }
 
-static void set_safe_command(Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ctrl)
+static void set_safe_command(Chassis_Ctrl_Cmd_t *chassis_ctrl, Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ctrl)
 {
     gimbal_ctrl->gimbal_mode = gimbal_zero_force;
     gimbal_ctrl->auto_search = 0;
@@ -53,9 +68,15 @@ static void set_safe_command(Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gi
     shoot_ctrl->shoot_mode    = shoot_off;
     shoot_ctrl->friction_mode = friction_off;
     shoot_ctrl->load_mode     = load_stop;
+
+    chassis_ctrl->vx          = 0;
+    chassis_ctrl->vy          = 0;
+    chassis_ctrl->wz          = 0;
+    chassis_ctrl->offset_angle = 0;
+    chassis_ctrl->chassis_mode = chassis_zero_force;
 }
 
-static void update_remote_debug(uint8_t status, Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ctrl)
+static void update_remote_debug(uint8_t status, Chassis_Ctrl_Cmd_t *chassis_ctrl, Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ctrl)
 {
     infantry4_remote_debug.update_count++;
     infantry4_remote_debug.remote_status = status;
@@ -79,39 +100,67 @@ static void update_remote_debug(uint8_t status, Shoot_Ctrl_Cmd_t *shoot_ctrl, Gi
     infantry4_remote_debug.shoot_mode    = (uint8_t)shoot_ctrl->shoot_mode;
     infantry4_remote_debug.friction_mode = (uint8_t)shoot_ctrl->friction_mode;
     infantry4_remote_debug.load_mode     = (uint8_t)shoot_ctrl->load_mode;
+
+    infantry4_remote_debug.chassis_vx          = chassis_ctrl->vx;
+    infantry4_remote_debug.chassis_vy          = chassis_ctrl->vy;
+    infantry4_remote_debug.chassis_offset_angle = chassis_ctrl->offset_angle;
+    infantry4_remote_debug.chassis_mode        = (uint8_t)chassis_ctrl->chassis_mode;
 }
 
-void RemoteControlSet(Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ctrl)
+void RemoteControlSet(Chassis_Ctrl_Cmd_t *chassis_ctrl, Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ctrl)
 {
-    if (shoot_ctrl == NULL || gimbal_ctrl == NULL) return;
+    if (chassis_ctrl == NULL || shoot_ctrl == NULL || gimbal_ctrl == NULL) return;
 
     uint8_t status = Module_Remote_get_offline_status();
 
     if ((status & 0x01) == 0U)
     {
-        set_safe_command(shoot_ctrl, gimbal_ctrl);
-        update_remote_debug(status, shoot_ctrl, gimbal_ctrl);
+        set_safe_command(chassis_ctrl, shoot_ctrl, gimbal_ctrl);
+        update_remote_debug(status, chassis_ctrl, shoot_ctrl, gimbal_ctrl);
         return;
     }
 
+    chassis_ctrl->vx = (float)Module_Remote_get_channel(1) / (float)(DT7_CH_VALUE_MAX - DT7_CH_VALUE_MIN);
+    chassis_ctrl->vy = (float)Module_Remote_get_channel(2) / (float)(DT7_CH_VALUE_MAX - DT7_CH_VALUE_MIN);
+    chassis_ctrl->wz = 0;
+
     int16_t       sw1_raw   = Module_Remote_get_channel(5);
+    int16_t       sw2_raw   = Module_Remote_get_channel(6);
     int16_t       wheel_raw = sbus_raw_centered(7);
     sbus_switch_e sw1       = sbus_switch_3pos(sw1_raw);
+    sbus_switch_e sw2       = sbus_switch_3pos(sw2_raw);
 
     gimbal_ctrl->auto_search = 0;
 
     if (sw1 == sbus_switch_down)
     {
-        set_safe_command(shoot_ctrl, gimbal_ctrl);
+        set_safe_command(chassis_ctrl, shoot_ctrl, gimbal_ctrl);
     }
     else
     {
         gimbal_ctrl->gimbal_mode = gimbal_gyro_mode;
+
         if (sw1 == sbus_switch_mid)
         {
             gimbal_ctrl->yaw -= 0.001f * (float)Module_Remote_get_channel(4);
             gimbal_ctrl->pitch += 0.001f * (float)Module_Remote_get_channel(3);
             VAL_LIMIT(gimbal_ctrl->pitch, PITCH_MIN_ANGLE, PITCH_MAX_ANGLE);
+        }
+
+        if (sw2 == sbus_switch_mid)
+        {
+            chassis_ctrl->chassis_mode = chassis_follow_gimbal_yaw;
+        }
+        else if (sw2 == sbus_switch_down)
+        {
+            chassis_ctrl->chassis_mode = chassis_manual;
+        }
+        else
+        {
+            chassis_ctrl->chassis_mode = chassis_zero_force;
+            chassis_ctrl->vx           = 0;
+            chassis_ctrl->vy           = 0;
+            chassis_ctrl->wz           = 0;
         }
 
         shoot_ctrl->load_mode = load_stop;
@@ -136,5 +185,5 @@ void RemoteControlSet(Shoot_Ctrl_Cmd_t *shoot_ctrl, Gimbal_Ctrl_Cmd_t *gimbal_ct
         }
     }
 
-    update_remote_debug(status, shoot_ctrl, gimbal_ctrl);
+    update_remote_debug(status, chassis_ctrl, shoot_ctrl, gimbal_ctrl);
 }
