@@ -1,3 +1,17 @@
+/*
+ * DEBUG_INDEX
+ * gimbal_cmd: 本文件第 30 行
+ *   含义：云台命令缓存，承接 robot_func 输出并传给 gimbal_func 执行。
+ * shoot_cmd : 本文件第 31 行
+ *   含义：发射命令缓存，承接 robot_func 输出并传给 shoot_func 执行。
+ * yaw_ecd   : 本文件第 32 行
+ *   含义：6020 当前编码器值反馈，由 gimbal_func 回写，便于后续观察实际转动。
+ * RemoteControlSet(&shoot_cmd, &gimbal_cmd): 本文件第 41 行
+ *   含义：将遥控器通道映射成命令结构体。
+ * gimbal_func(&gimbal_cmd, &yaw_ecd): 本文件第 42 行
+ *   含义：消费 gimbal_cmd，并驱动 yaw 电机。
+ */
+
 #include "robot_control.h"
 
 #include "bsp_def.h"
