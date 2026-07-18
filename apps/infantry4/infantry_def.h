@@ -32,10 +32,10 @@ typedef enum
 
 typedef struct
 {
-    float         yaw;         /* 当前 infantry4 临时直控里取值为 -1/0/+1，表示 yaw 左转/停止/右转方向命令。 */
-    float         pitch;       /* pitch 目标量；当前阶段固定为 0，后续接 pitch 电机后恢复实际含义。 */
+    float         yaw;         /* yaw 目标角度，语义对齐 infantry3；当前阶段仅接入 yaw 闭环。 */
+    float         pitch;       /* pitch 目标角度；当前阶段固定为 0，后续接 pitch 电机后恢复实际含义。 */
     uint8_t       auto_search; /* 自动瞄准/搜索标志；当前阶段恒为 0。 */
-    gimbal_mode_e gimbal_mode; /* 云台模式：zero_force=停机，gyro_mode=允许当前临时直控逻辑运行。 */
+    gimbal_mode_e gimbal_mode; /* 云台模式：zero_force=停机，gyro_mode=手动闭环，auto_mode=预留自动模式。 */
 } Gimbal_Ctrl_Cmd_t;
 
 typedef enum
@@ -84,7 +84,7 @@ typedef struct
     int16_t  wheel_raw;      /* ch7 原始值，当前作为拨弹/旋钮输入。 */
     uint8_t  sw1_pos;        /* sw1 三段归一化结果：0=下，1=中，2=上。 */
     uint8_t  sw2_pos;        /* sw2 三段归一化结果：0=下，1=中，2=上。 */
-    float    gimbal_yaw;     /* 当前写入 gimbal_cmd.yaw 的值。 */
+    float    gimbal_yaw;     /* 当前写入 gimbal_cmd.yaw 的目标角度。 */
     float    gimbal_pitch;   /* 当前写入 gimbal_cmd.pitch 的值。 */
     uint8_t  gimbal_mode;    /* 当前写入 gimbal_cmd.gimbal_mode 的值。 */
     uint8_t  shoot_mode;     /* 当前写入 shoot_cmd.shoot_mode 的值。 */
