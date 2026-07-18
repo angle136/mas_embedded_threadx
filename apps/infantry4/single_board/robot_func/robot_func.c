@@ -120,8 +120,8 @@ void RemoteControlSet(Chassis_Ctrl_Cmd_t *chassis_ctrl, Shoot_Ctrl_Cmd_t *shoot_
         return;
     }
 
-    chassis_ctrl->vx = (float)Module_Remote_get_channel(1) / (float)(DT7_CH_VALUE_MAX - DT7_CH_VALUE_MIN);
-    chassis_ctrl->vy = (float)Module_Remote_get_channel(2) / (float)(DT7_CH_VALUE_MAX - DT7_CH_VALUE_MIN);
+    chassis_ctrl->vx = -(float)Module_Remote_get_channel(1) / (float)(DT7_CH_VALUE_MAX - DT7_CH_VALUE_MIN);
+    chassis_ctrl->vy = -(float)Module_Remote_get_channel(2) / (float)(DT7_CH_VALUE_MAX - DT7_CH_VALUE_MIN);
     chassis_ctrl->wz = 0;
 
     int16_t       sw1_raw   = Module_Remote_get_channel(5);
@@ -143,7 +143,7 @@ void RemoteControlSet(Chassis_Ctrl_Cmd_t *chassis_ctrl, Shoot_Ctrl_Cmd_t *shoot_
         if (sw1 == sbus_switch_mid)
         {
             gimbal_ctrl->yaw -= 0.001f * (float)Module_Remote_get_channel(4);
-            gimbal_ctrl->pitch += 0.001f * (float)Module_Remote_get_channel(3);
+            gimbal_ctrl->pitch -= 0.001f * (float)Module_Remote_get_channel(3);
             VAL_LIMIT(gimbal_ctrl->pitch, PITCH_MIN_ANGLE, PITCH_MAX_ANGLE);
         }
 
@@ -157,10 +157,7 @@ void RemoteControlSet(Chassis_Ctrl_Cmd_t *chassis_ctrl, Shoot_Ctrl_Cmd_t *shoot_
         }
         else
         {
-            chassis_ctrl->chassis_mode = chassis_zero_force;
-            chassis_ctrl->vx           = 0;
-            chassis_ctrl->vy           = 0;
-            chassis_ctrl->wz           = 0;
+            chassis_ctrl->chassis_mode = chassis_rotate;
         }
 
         shoot_ctrl->load_mode = load_stop;

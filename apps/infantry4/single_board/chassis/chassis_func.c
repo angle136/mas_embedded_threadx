@@ -152,4 +152,3 @@ void chassis_func(Chassis_Ctrl_Cmd_t *chassis_cmd)
 
     Chassis_Mecanum_Calc(chassis_motors, &chassis_diff_config, chassis_vx, chassis_vy, chassis_wz);
 }
-
