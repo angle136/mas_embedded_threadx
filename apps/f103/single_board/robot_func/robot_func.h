@@ -14,7 +14,7 @@
 #ifndef _ROBOT_FUNC_H_
 #define _ROBOT_FUNC_H_
 
-#include "<robot>_def.h"   /* TODO: 改为 <你的机器人>_def.h */
+#include "robot_def.h"   /* TODO: 改为 <你的机器人>_def.h */
 
 /**
  * @brief 计算 yaw 编码器与底盘对齐点的最小旋转差值
