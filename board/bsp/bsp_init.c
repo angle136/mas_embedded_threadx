@@ -9,7 +9,9 @@
 #include "bsp_init.h"
 
 #include "bsp_dwt.h"
+#if defined(STM32H723xx) || defined(STM32F407xx)
 #include "usbd_cdc_acm_user.h"
+#endif
 #include "bsp_led.h"
 #include "bsp_beep.h"
 #include "bsp_can_task.h"
