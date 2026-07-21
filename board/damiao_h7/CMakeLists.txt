@@ -24,11 +24,7 @@ set(CMAKE_PROJECT_NAME base)
 # ThreadX configuration for Cortex-M7 / GCC
 set(THREADX_ARCH cortex_m7)
 
-# 机器人 & 板型 配置
-set(ROBOT sentry)
-set(BOARD gimbal)
-
-# 加载配置
+# 加载配置（ROBOT/BOARD 在 apps/config.cmake 中定义）
 include(${CMAKE_SOURCE_DIR}/../../apps/config.cmake)
 
 # 生成头文件到 build 目录

@@ -9,7 +9,7 @@
 #ifndef _GIMBAL_FUNC_H_
 #define _GIMBAL_FUNC_H_
 
-#include "robot_def.h"   /* TODO: 改为你的 def 文件 */
+#include "test_def.h" 
 
 void gimbal_init(void);
 

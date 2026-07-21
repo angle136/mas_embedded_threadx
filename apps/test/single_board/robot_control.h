@@ -3,7 +3,7 @@
  *
  * 使用说明:
  *   1. 将 <robot> 替换为你的机器人名
- *   2. #include "<robot>_def.h" 改为你的 def 文件
+ *   2. #include "test_def.h" 改为你的 def 文件
  *   3. 根据需要启用/禁用各个子系统
  */
 

@@ -24,7 +24,7 @@ set(CMAKE_PROJECT_NAME base)
 set(THREADX_ARCH cortex_m3)
 
 # 机器人 & 板型 配置
-set(ROBOT f103)
+set(ROBOT test)
 set(BOARD single)
 
 # 加载配置
