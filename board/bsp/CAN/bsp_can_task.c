@@ -10,7 +10,11 @@
 
 #define BSP_CAN_RX_TASK_PRIORITY 3
 #define BSP_CAN_TX_TASK_PRIORITY 4
-#define BSP_CAN_TASK_STACK_SIZE  1024U
+#if defined(STM32F103xB)
+#define BSP_CAN_TASK_STACK_SIZE  512U    // F103: only 20KB RAM
+#else
+#define BSP_CAN_TASK_STACK_SIZE  1024U   // F407/H723: sufficient RAM
+#endif
 
 TX_SEMAPHORE g_can_rx_sem;
 TX_SEMAPHORE g_can_tx_sem;
