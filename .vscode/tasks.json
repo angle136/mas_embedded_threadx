@@ -8,7 +8,8 @@
             "options": [
                 "damiao_h7",
                 "dji_c",
-                "f103_c8"
+                "f103_c8",
+                "f105_rc"
             ],
             "default": "dji_c"
         },
@@ -84,6 +85,35 @@
                 "args": [
                     "-lc",
                     "cmake -S ${workspaceFolder}/board/f103_c8 -B ${workspaceFolder}/build/f103_c8/Debug --preset Debug -G Ninja && cmake --build ${workspaceFolder}/build/f103_c8/Debug --config Debug -j $(nproc) && cp ${workspaceFolder}/build/f103_c8/Debug/compile_commands.json ${workspaceFolder}/build/compile_commands.json && cp ${workspaceFolder}/build/f103_c8/Debug/base.elf ${workspaceFolder}/build/f103_c8.elf"
+                ]
+            }
+        },
+        {
+            "label": "Build f105_rc",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": false,
+                "echo": true,
+                "showReuseMessage": false
+            },
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-Command",
+                    "cmake -S ${workspaceFolder}/board/f105_rc -B ${workspaceFolder}/build/f105_rc/Debug --preset Debug -G Ninja; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cmake --build ${workspaceFolder}/build/f105_rc/Debug --config Debug -j ${env:NUMBER_OF_PROCESSORS}; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path ${workspaceFolder}/build/f105_rc/Debug/compile_commands.json -Destination ${workspaceFolder}/build/compile_commands.json -Force; Copy-Item -Path ${workspaceFolder}/build/f105_rc/Debug/base.elf -Destination ${workspaceFolder}/build/f105_rc.elf -Force"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-lc",
+                    "cmake -S ${workspaceFolder}/board/f105_rc -B ${workspaceFolder}/build/f105_rc/Debug --preset Debug -G Ninja && cmake --build ${workspaceFolder}/build/f105_rc/Debug --config Debug -j $(nproc) && cp ${workspaceFolder}/build/f105_rc/Debug/compile_commands.json ${workspaceFolder}/build/compile_commands.json && cp ${workspaceFolder}/build/f105_rc/Debug/base.elf ${workspaceFolder}/build/f105_rc.elf"
                 ]
             }
         },
