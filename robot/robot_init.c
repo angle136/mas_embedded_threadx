@@ -22,6 +22,8 @@
 
 #if defined(STM32F103xB)
 #define TX_APP_MEM_POOL_SIZE (4 * 1024)   // 4KB F103: 仅20KB RAM
+#elif defined(STM32F105xC)
+#define TX_APP_MEM_POOL_SIZE (12 * 1024)  // 12KB F105: 64KB RAM (含CMSIS-DSP开销)
 #else
 #define TX_APP_MEM_POOL_SIZE (20 * 1024)  // 20KB F407/H723: 充足RAM
 #endif
