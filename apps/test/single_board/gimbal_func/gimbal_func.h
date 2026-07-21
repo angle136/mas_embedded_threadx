@@ -1,15 +1,12 @@
 /*
- * @Description: 云台功能模板
- *
- * 使用说明:
- *   1. gimbal_init(): 初始化云台电机/编码器/PID
- *   2. gimbal_func(): 每周期云台控制逻辑
+ * @Description: 云台功能 — F103 测试用
+ *   仅初始化达妙电机 DM4310，func 留空
  */
 
 #ifndef _GIMBAL_FUNC_H_
 #define _GIMBAL_FUNC_H_
 
-#include "test_def.h" 
+#include "test_def.h"
 
 void gimbal_init(void);
 

@@ -1,41 +1,66 @@
 /*
  * robot_control.c
  *
- * F103C8T6 单板测试 — 达妙电机云台控制
- * 不含遥控器/PS2 逻辑, 云台初始零转矩保持
+ * F103C8T6 单板测试
+ *   云台: 达妙电机 DM4310 (仅初始化)
+ *   底盘: 留空
+ *   发射: 无
+ *   遥控器: 暂不接入
  */
 
-#include "app_init.h"
-#include "robot_func.h"
+#include "robot_control.h"
+#include "tx_api.h"
+#include "bsp_def.h"
+#include "test_def.h"
 #include "gimbal_func.h"
+#include "chassis_func.h"
+#include "robot_func.h"
 
-#define LOG_TAG "Robot"
+#define LOG_TAG "app_robot_control"
 #define LOG_LVL LOG_LVL_INFO
 #include "ulog_def.h"
 
-static Gimbal_Ctrl_Cmd_t gimbal_ctrl_cmd = {0};
-static uint16_t          yaw_ecd         = 0;
+static TX_THREAD                  robot_control_thread;
+APPS_STACK_SECTION static uint8_t robot_control_thread_stack[1024];
+
+static Gimbal_Ctrl_Cmd_t  gimbal_cmd;
+static Chassis_Ctrl_Cmd_t chassis_cmd;
+static uint16_t           yaw_ecd;
+
+static void robot_control_task(ULONG thread_input)
+{
+    (void)thread_input;
+
+    while (1)
+    {
+        /* 遥控器控制输入 (暂不接入) */
+        // RemoteControlSet(&chassis_cmd, NULL, &gimbal_cmd);
+
+        /* 云台控制 */
+        gimbal_func(&gimbal_cmd, &yaw_ecd);
+        /* 底盘控制 */
+        chassis_func(&chassis_cmd);
+
+        tx_thread_sleep(2);
+    }
+}
 
 void robot_control_init(void)
 {
+    UINT status;
+
     gimbal_init();
-    LOG_I("robot control init done");
-}
+    chassis_init();
 
-void robot_control_loop(void)
-{
-    /* 获取遥控器命令 (后续添加) */
-    // RemoteControlSet(NULL, NULL, &gimbal_ctrl_cmd);
+    status = tx_thread_create(&robot_control_thread, "robot_control_thread",
+                              robot_control_task, 0,
+                              robot_control_thread_stack, 1024,
+                              30, 30, TX_NO_TIME_SLICE, TX_AUTO_START);
+    if (status != TX_SUCCESS)
+    {
+        LOG_E("robot_control_thread create failed!");
+        return;
+    }
 
-    /* 执行云台控制 */
-    gimbal_func(&gimbal_ctrl_cmd, &yaw_ecd);
-
-    (void)yaw_ecd;
-}
-
-void robot_control_exit(void)
-{
-    gimbal_ctrl_cmd.gimbal_mode = gimbal_zero_force;
-    gimbal_func(&gimbal_ctrl_cmd, NULL);
-    LOG_I("robot control exit");
+    LOG_I("robot_control init success!");
 }
