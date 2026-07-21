@@ -20,7 +20,7 @@ extern TX_BYTE_POOL tx_app_byte_pool;
 #elif defined(STM32F407xx)
 #define APPS_STACK_SECTION __attribute__((section(".ccmram")))
 #define BUFFER_SECTION     __attribute__((section(".ram"))) __attribute__((aligned(32)))
-#elif defined(STM32F103xB)
+#elif defined(STM32F105xC) || defined(STM32F103xB)
 #define APPS_STACK_SECTION
 #define BUFFER_SECTION                   __attribute__((aligned(32)))
 #endif

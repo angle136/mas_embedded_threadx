@@ -475,6 +475,18 @@ uint8_t BSP_FLASH_Read_Buffer(uint8_t *buffer, uint32_t length)
 }
 
 
+#elif defined(STM32F105xC)
+
+#include "stm32f1xx_hal.h"
+
+/*
+ * F105RCT6 片内 Flash 布局：共 256KB，每页 1KB，共 256 页（页 0 ~ 页 255）
+ * 页 0    (0x08000000): 程序代码起始
+ * 页 255  (0x0803FC00): 最后一页，预留作用户参数存储
+ */
+#define USER_FLASH_PAGE_ADDR  0x0803FC00U
+#define USER_FLASH_PAGE_SIZE  (1U * 1024U)
+
 #elif defined(STM32F103xB)
 
 #include "stm32f1xx_hal.h"

@@ -7,7 +7,7 @@
 #include "stm32f4xx_hal_uart.h"
 #elif defined(STM32H723xx)
 #include "stm32h7xx_hal_uart.h"
-#elif defined(STM32F103xB)
+#elif defined(STM32F105xC) || defined(STM32F103xB)
 #include "stm32f1xx_hal_uart.h"
 #endif
 

@@ -85,6 +85,49 @@ static bool can_config_filter(CAN_HandleTypeDef *hcan, uint32_t rx_id, uint8_t *
     if (out_bank_index) *out_bank_index = filter_bank;
     return true;
 }
+#elif defined(STM32F105xC)
+static uint8_t g_can1_filter_idx;
+static uint8_t g_can2_filter_idx = 14;
+
+static bool can_config_filter(CAN_HandleTypeDef *hcan, uint32_t rx_id, uint8_t *out_bank_index)
+{
+    uint8_t filter_bank;
+    if (hcan->Instance == CAN1)
+    {
+        if (g_can1_filter_idx >= 14) return false;
+        filter_bank = g_can1_filter_idx++;
+    }
+    else if (hcan->Instance == CAN2)
+    {
+        if (g_can2_filter_idx >= 28) return false;
+        filter_bank = g_can2_filter_idx++;
+    }
+    else
+        return false;
+
+    CAN_FilterTypeDef cfg = {
+        .FilterMode           = CAN_FILTERMODE_IDMASK,
+        .FilterScale          = CAN_FILTERSCALE_16BIT,
+        .FilterFIFOAssignment = (rx_id & 1) ? CAN_FILTER_FIFO0 : CAN_FILTER_FIFO1,
+        .SlaveStartFilterBank = 14,
+        .FilterIdLow          = rx_id << 5,
+        .FilterMaskIdLow      = 0x7FF << 5,
+        .FilterIdHigh         = rx_id << 5,
+        .FilterMaskIdHigh     = 0x7FF << 5,
+        .FilterBank           = filter_bank,
+        .FilterActivation     = CAN_FILTER_ENABLE,
+    };
+    if (HAL_CAN_ConfigFilter(hcan, &cfg) != HAL_OK)
+    {
+        if (hcan->Instance == CAN1)
+            g_can1_filter_idx--;
+        else
+            g_can2_filter_idx--;
+        return false;
+    }
+    if (out_bank_index) *out_bank_index = filter_bank;
+    return true;
+}
 #elif defined(STM32F103xB)
 static uint8_t g_can_filter_idx;
 

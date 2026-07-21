@@ -392,7 +392,7 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 #elif defined(STM32F407xx)
         volatile uint32_t sr = hspi->Instance->SR;
         volatile uint32_t dr = hspi->Instance->DR;
-#elif defined(STM32F103xB)
+#elif defined(STM32F105xC) || defined(STM32F103xB)
         volatile uint32_t sr = hspi->Instance->SR;
         volatile uint32_t dr = hspi->Instance->DR;
 #endif

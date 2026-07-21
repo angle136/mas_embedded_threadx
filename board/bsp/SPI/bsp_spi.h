@@ -15,7 +15,7 @@
 #define SPI_BUS_NUM 4
 #elif defined(STM32F407xx)
 #define SPI_BUS_NUM 3
-#elif defined(STM32F103xB)
+#elif defined(STM32F105xC) || defined(STM32F103xB)
 #define SPI_BUS_NUM 2
 #endif
 
