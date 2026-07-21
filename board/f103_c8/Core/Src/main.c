@@ -28,7 +28,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "tx_api.h"
+#include "robot_init.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,7 +101,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-
+  tx_kernel_enter();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -159,7 +160,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void tx_application_define(void *first_unused_memory)
+{
+    Robot_Init();
+}
 /* USER CODE END 4 */
 
 /**
