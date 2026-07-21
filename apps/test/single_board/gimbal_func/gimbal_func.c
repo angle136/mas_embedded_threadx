@@ -1,4 +1,12 @@
 /*
+ * @Author: AdoreElysia w2006825@qq.com
+ * @Date: 2026-07-20 19:36:04
+ * @LastEditors: AdoreElysia w2006825@qq.com
+ * @LastEditTime: 2026-07-21 14:38:13
+ * @FilePath: \mas_embedded_threadx-f103\apps\test\single_board\gimbal_func\gimbal_func.c
+ * @Description: 
+ */
+/*
  * @Description: 云台功能 — F103 测试用
  *   gimbal_init(): 初始化达妙电机 DM4310, MIT 模式
  *   gimbal_func(): 留空 (不使用标准 zero_force/gyro_mode/auto_mode)
@@ -35,7 +43,7 @@ void gimbal_init(void)
             {
                 .speed_PID =
                     {
-                        .Kp = 0.5f, .Ki = 0.05f, .Kd = 0.0f,
+                        .Kp = 0.0f, .Ki = 0.0f, .Kd = 0.0f,
                         .MaxOut = 10.0f, .DeadBand = 0.0f,
                         .IntegralLimit = 3.0f,
                         .Improve = PID_Integral_Limit,
