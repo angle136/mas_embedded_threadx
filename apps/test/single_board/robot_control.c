@@ -12,6 +12,7 @@
 #include "tx_api.h"
 #include "bsp_def.h"
 #include "test_def.h"
+#include "can.h"
 #include "gimbal_func.h"
 #include "chassis_func.h"
 #include "robot_func.h"
@@ -35,7 +36,7 @@ static void robot_control_task(ULONG thread_input)
     {
         static uint32_t _can_chk = 0;
         if (++_can_chk % 500 == 0) {
-            CAN_TypeDef *cx = CAN1;
+            CAN_TypeDef *cx = hcan.Instance;
             LOG_I("CAN TSR=0x%08lx ESR=0x%08lx REC=%lu TEC=%lu",
                   cx->TSR, cx->ESR,
                   (cx->ESR >> 16) & 0xFF, (cx->ESR >> 24) & 0xFF);

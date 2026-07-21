@@ -1,7 +1,4 @@
 #include "bsp_can.h"
-#include "ulog_def.h"
-#define LOG_TAG "CAN"
-#define LOG_LVL LOG_LVL_INFO
 #include "bsp_can_task.h"
 #include "bsp_def.h"
 #include <string.h>
