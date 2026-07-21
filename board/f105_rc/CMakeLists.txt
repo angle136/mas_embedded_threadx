@@ -23,7 +23,11 @@ set(CMAKE_PROJECT_NAME base)
 # ThreadX configuration for Cortex-M3 / GCC
 set(THREADX_ARCH cortex_m3)
 
-# 加载配置（ROBOT/BOARD 在 apps/config.cmake 中定义）
+# 机器人 & 板型配置 (在 config.cmake 前设置以覆盖默认值)
+set(ROBOT test)
+set(BOARD single)
+
+# 加载配置
 include(${CMAKE_SOURCE_DIR}/../../apps/config.cmake)
 
 # 生成头文件到 build 目录
@@ -44,7 +48,7 @@ enable_language(C ASM)
 add_executable(${CMAKE_PROJECT_NAME})
 
 # Add STM32CubeMX generated sources
-add_subdirectory(cmake/stm32cubemx)
+add_subdirectory(base/cmake/stm32cubemx)
 
 # Add ThreadX RTOS
 add_subdirectory(../../threadx threadx)
@@ -65,7 +69,7 @@ add_subdirectory(../../CMSIS-DSP ${CMAKE_CURRENT_BINARY_DIR}/cmsisdsp)
 # Apply compiler flags to CMSIS-DSP
 target_compile_options(CMSISDSP PRIVATE -O3 -ffast-math -fno-math-errno -flto)
 # Provide CMSIS-Core headers (cmsis_compiler.h) to CMSIS-DSP
-target_include_directories(CMSISDSP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Include)
+target_include_directories(CMSISDSP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/base/Drivers/CMSIS/Include)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE

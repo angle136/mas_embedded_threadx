@@ -1,5 +1,6 @@
 #include "bsp_spi.h"
 #include "bsp_def.h"
+#ifdef HAL_SPI_MODULE_ENABLED
 #include "spi.h"
 #include "tx_api.h"
 #include <string.h>
@@ -408,3 +409,5 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
         hspi->ErrorCode = HAL_SPI_ERROR_NONE;
     }
 }
+
+#endif /* HAL_SPI_MODULE_ENABLED */
