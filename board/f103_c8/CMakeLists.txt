@@ -23,9 +23,6 @@ set(CMAKE_PROJECT_NAME base)
 # ThreadX configuration for Cortex-M3 / GCC
 set(THREADX_ARCH cortex_m3)
 
-# 机器人 & 板型 配置
-set(ROBOT test)
-set(BOARD single)
 
 # 加载配置
 include(${CMAKE_SOURCE_DIR}/../../apps/config.cmake)
