@@ -1,7 +1,7 @@
 #include "bsp_spi.h"
 #include "bsp_def.h"
-#ifdef HAL_SPI_MODULE_ENABLED
 #include "spi.h"
+#ifdef HAL_SPI_MODULE_ENABLED
 #include "tx_api.h"
 #include <string.h>
 

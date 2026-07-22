@@ -1,7 +1,7 @@
 #include "bsp_i2c.h"
 #include "bsp_def.h"
-#ifdef HAL_I2C_MODULE_ENABLED
 #include "i2c.h"
+#ifdef HAL_I2C_MODULE_ENABLED
 #include "tx_api.h"
 #include <string.h>
 
