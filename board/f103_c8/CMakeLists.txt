@@ -92,3 +92,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     app
     # Add user defined libraries
 )
+
+# Enable LTO at link stage (required for -flto compiled objects)
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -flto)

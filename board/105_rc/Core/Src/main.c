@@ -29,6 +29,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "tx_api.h"
+#include "robot_init.h"
 
 /* USER CODE END Includes */
 
@@ -97,7 +99,7 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   MX_I2C1_Init();
-  MX_IWDG_Init();
+  //MX_IWDG_Init();
   MX_SPI1_Init();
   MX_TIM3_Init();
   MX_UART4_Init();
@@ -105,6 +107,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  /* Start ThreadX */
+  tx_kernel_enter();
 
   /* USER CODE END 2 */
 
@@ -166,6 +171,11 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void tx_application_define(void *first_unused_memory)
+{
+    Robot_Init();
+}
 
 /* USER CODE END 4 */
 
