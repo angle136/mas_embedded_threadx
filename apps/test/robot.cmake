@@ -14,7 +14,7 @@ set(MODULES_CHASSIS  OFFLINE REFEREE MOTOR BOARDCOMM)
 set(OFFLINE_BEEP_ENABLE     0)    # 开启蜂鸣器
 
 # REMOTE 参数
-set(REMOTE_UART             huart1) # SBUS 串口
+set(REMOTE_UART             huart3) # SBUS 串口
 set(REMOTE_VT_UART          huart2) # 图传串口
 set(REMOTE_SOURCE           1)      # 遥控器选择: 0=none, 1=sbus, 2=dt7
 set(REMOTE_VT_SOURCE        0)      # 图传选择:   0=none, 1=vt02, 2=vt03

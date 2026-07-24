@@ -2,7 +2,7 @@
 # 在这里修改 ROBOT / BOARD
 
 # 目标机器人 & 板型 (各板级可在 include 前 set 覆盖)
-set(ROBOT "test") # hero / engineer / infantry3 / infantry4 / infantry5 / drone / sentry / darts / customcontrol
+set(ROBOT "infantry3") # hero / engineer / infantry3 / infantry4 / infantry5 / drone / sentry / darts / customcontrol
 set(BOARD "single")    # single / gimbal / chassis
 
 

@@ -92,6 +92,43 @@ static void dbg_dump_remote_uart_regs(void)
           (unsigned long)sr, rxne, idle, ore, fe, nf, tc);
     LOG_I("  HAL gState: %d", (int)REMOTE_UART.gState);
 
+    /* 信号检测：采样 RX 引脚 1000 次，看电平有无跳变 */
+    {
+        volatile uint32_t prev = 0, changes = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            uint32_t cur = REMOTE_UART.Instance->SR;
+            (void)cur;
+            uint32_t sample = REMOTE_UART.Instance->DR;
+            /* 读 DR 会清 RXNE，不影响 */
+            if (i == 0)
+                prev = sample;
+            else if (sample != prev)
+                changes++;
+            prev = sample;
+        }
+        /* 上面的 DR 采样没意义，换 GPIO IDR 采样 */
+        changes = 0;
+        uint32_t prev_idr = 0;
+        for (int i = 0; i < 10000; i++)
+        {
+            uint32_t cur = GPIOC->IDR;
+            if (i == 0)
+                prev_idr = (cur >> 11) & 1;
+            else
+            {
+                uint32_t bit = (cur >> 11) & 1;
+                if (bit != prev_idr)
+                {
+                    changes++;
+                    prev_idr = bit;
+                }
+            }
+        }
+        LOG_I("  PC11 signal: %lu changes in 10000 samples (last=%lu)",
+              (unsigned long)changes, (unsigned long)prev_idr);
+    }
+
     /* NVIC: IRQn 决定 ISER 索引和位 */
     if (irqn >= 0)
     {
@@ -113,8 +150,6 @@ static void robot_control_task(ULONG thread_input)
 
     while (1)
     {
-        gimbal_func(&gimbal_cmd, &yaw_ecd);
-        chassis_func(&chassis_cmd);
 
         /* 每 500 个循环 (~1s) 打印遥控器串口寄存器状态 */
         loop_count++;
@@ -136,7 +171,6 @@ void robot_control_init(void)
     gimbal_init();
     chassis_init();
 
-    Module_Remote_init();
 
     status = tx_thread_create(&robot_control_thread, "robot_control_thread",
                               robot_control_task, 0,
